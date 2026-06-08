@@ -22,6 +22,8 @@ export interface Profile {
   full_name: string;
   phone: string | null;
   role: Role;
+  requested_role: "teacher" | "student" | null;
+  status: "active" | "pending";
   created_at: string;
   updated_at: string;
 }
@@ -112,4 +114,33 @@ export interface OwnerDashboardStats {
   total_hours: number;
   attendance_rate: number;
   at_risk_count: number;
+}
+
+export interface Material {
+  id: string;
+  class_id: string;
+  uploaded_by: string;
+  title: string;
+  kind: "file" | "link";
+  storage_path: string | null;
+  url: string | null;
+  created_at: string;
+}
+
+/** v_session_attendance */
+export interface SessionAttendanceRow {
+  session_id: string;
+  class_id: string;
+  class_name: string;
+  level: Level;
+  teacher_id: string;
+  teacher_name: string | null;
+  session_number: number;
+  scheduled_at: string;
+  status: SessionStatus;
+  actual_minutes: number | null;
+  committed: number;
+  present: number;
+  late: number;
+  missed: number;
 }

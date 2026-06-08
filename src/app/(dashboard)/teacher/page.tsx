@@ -46,7 +46,12 @@ export default async function TeacherHomePage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">{dict.nav.dashboard}</h1>
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold">{dict.nav.dashboard}</h1>
+        <Button asChild variant="outline">
+          <Link href="/teacher/classes">{dict.materials.teacherTitle}</Link>
+        </Button>
+      </div>
 
       <div className="grid grid-cols-1 gap-4 sm:max-w-xs">
         <StatsCard

@@ -26,15 +26,20 @@ export async function signIn(email: string, password: string) {
 export async function signUp(
   email: string,
   password: string,
-  fullName: string
+  fullName: string,
+  requestedRole: "teacher" | "student" = "student"
 ) {
   const supabase = await createClient();
   const { error } = await supabase.auth.signUp({
     email,
     password,
-    options: { data: { full_name: fullName } },
+    options: {
+      data: { full_name: fullName, requested_role: requestedRole },
+    },
   });
   if (error) return { error: error.message };
-  // Role is always 'student' (enforced by DB trigger).
-  redirect("/student/classes");
+  // Effective role is always 'student' on signup (DB trigger). A teacher
+  // request is parked as pending until an owner approves it; the new account
+  // can use the app as a student in the meantime.
+  return { success: true, pending: requestedRole === "teacher" };
 }

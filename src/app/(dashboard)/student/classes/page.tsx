@@ -1,14 +1,26 @@
+import { FileText, LinkIcon } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getDictionary } from "@/lib/i18n";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CommitButton } from "@/components/classes/CommitButton";
 import { formatDateTime } from "@/lib/datetime";
-import type { Class, ClassSession, Commitment, Profile } from "@/types/database";
+import { safeUrl } from "@/lib/safeUrl";
+import type {
+  Class,
+  ClassSession,
+  Commitment,
+  Material,
+  Profile,
+} from "@/types/database";
 
 interface ClassWithSessions extends Class {
   teacher: Pick<Profile, "full_name"> | null;
   class_sessions: ClassSession[];
+}
+
+function publicUrl(path: string): string {
+  return `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/class-materials/${path}`;
 }
 
 export default async function StudentClassesPage() {
@@ -40,6 +52,28 @@ export default async function StudentClassesPage() {
   }
 
   const rows = (classes as ClassWithSessions[] | null) ?? [];
+  const ids = rows.map((c) => c.id);
+
+  const { data: materials } = ids.length
+    ? await supabase
+        .from("materials")
+        .select("id, class_id, title, kind, storage_path, url")
+        .in("class_id", ids)
+        .order("created_at", { ascending: false })
+    : { data: [] as Material[] };
+
+  const materialsByClass = new Map<
+    string,
+    { id: string; title: string; kind: "file" | "link"; href: string }[]
+  >();
+  for (const m of (materials as Material[] | null) ?? []) {
+    const href =
+      m.kind === "file" ? publicUrl(m.storage_path ?? "") : m.url ?? "";
+    materialsByClass.set(m.class_id, [
+      ...(materialsByClass.get(m.class_id) ?? []),
+      { id: m.id, title: m.title, kind: m.kind, href },
+    ]);
+  }
 
   return (
     <div className="space-y-6">
@@ -89,6 +123,33 @@ export default async function StudentClassesPage() {
                     )}
                   </div>
                 ))}
+
+              {(materialsByClass.get(c.id)?.length ?? 0) > 0 && (
+                <div className="mt-3 border-t pt-3">
+                  <p className="mb-2 text-xs font-medium text-muted-foreground">
+                    {dict.materials.title}
+                  </p>
+                  <ul className="space-y-1.5">
+                    {materialsByClass.get(c.id)!.map((m) => (
+                      <li key={m.id}>
+                        <a
+                          href={safeUrl(m.href)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 text-sm text-primary hover:underline"
+                        >
+                          {m.kind === "file" ? (
+                            <FileText className="h-4 w-4 shrink-0" />
+                          ) : (
+                            <LinkIcon className="h-4 w-4 shrink-0" />
+                          )}
+                          <span className="truncate">{m.title}</span>
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
             </CardContent>
           </Card>
         ))

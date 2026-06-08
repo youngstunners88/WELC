@@ -7,9 +7,10 @@ import {
   LayoutDashboard,
   BookOpen,
   Users,
-  GraduationCap,
   History,
   Presentation,
+  ClipboardList,
+  FolderOpen,
   LogOut,
   Menu,
   X,
@@ -33,8 +34,8 @@ function itemsForRole(role: Role, dict: Dictionary): NavItem[] {
     return [
       { href: "/owner", label: dict.nav.dashboard, icon: LayoutDashboard },
       { href: "/owner/classes", label: dict.nav.classes, icon: BookOpen },
-      { href: "/owner/teachers", label: dict.nav.teachers, icon: Users },
-      { href: "/owner/students", label: dict.nav.students, icon: GraduationCap },
+      { href: "/owner/people", label: dict.nav.people, icon: Users },
+      { href: "/owner/attendance", label: dict.nav.attendance, icon: ClipboardList },
       // Owners who also teach reach their own sessions here (the /teacher
       // pages already scope to the logged-in user's assigned classes).
       { href: "/teacher", label: dict.nav.teaching, icon: Presentation },
@@ -43,6 +44,7 @@ function itemsForRole(role: Role, dict: Dictionary): NavItem[] {
   if (role === "teacher") {
     return [
       { href: "/teacher", label: dict.nav.dashboard, icon: LayoutDashboard },
+      { href: "/teacher/classes", label: dict.nav.materials, icon: FolderOpen },
     ];
   }
   return [
