@@ -1,5 +1,9 @@
 -- 20260601_initial_schema.sql
 
+-- Allow forward references in SQL function bodies (auth_user_role reads the
+-- profiles table, which is created further down in this same migration).
+set check_function_bodies = off;
+
 -- Auth helper: reads role from profiles without exposing the table
 create or replace function auth_user_role()
 returns text

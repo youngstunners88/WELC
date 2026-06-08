@@ -40,10 +40,11 @@ create policy "classes: student reads all"
   using (auth_user_role() = 'student');
 
 -- ── FIX 3: Sessions RLS — revoke direct writes on sensitive columns ──────────
--- Revoke all UPDATE on class_sessions from client roles
+-- Revoke all UPDATE on class_sessions from client roles. Status/timing columns
+-- (status, started_at, ended_at, actual_minutes) must only be changed through
+-- the security-definer RPCs below, never written directly by clients. The
+-- meeting link lives on the `classes` table, not here.
 revoke update on class_sessions from authenticated;
--- Grant only safe column updates (teacher can update meeting_link)
-grant update (meeting_link, meeting_platform) on class_sessions to authenticated;
 
 create policy "sessions: visible to all authenticated"
   on class_sessions for select
