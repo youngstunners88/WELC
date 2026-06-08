@@ -57,6 +57,14 @@ grant execute on function rpc_log_session(uuid, int) to authenticated;
 alter table profiles
   add column if not exists referred_by uuid references profiles(id);
 
+-- A teacher may read the profiles of students attributed to them, even before
+-- those students commit to any session (the existing "teacher reads own
+-- students" policy only covers students who already have a commitment).
+drop policy if exists "profiles: teacher reads referred students" on profiles;
+create policy "profiles: teacher reads referred students"
+  on profiles for select
+  using (auth_user_role() in ('teacher','owner') and referred_by = auth.uid());
+
 -- Re-create the signup trigger to also capture a referring teacher id passed in
 -- user metadata as `referred_by`. The id is only honoured if it belongs to an
 -- actual teacher/owner, so a bogus value can't poison attribution.
