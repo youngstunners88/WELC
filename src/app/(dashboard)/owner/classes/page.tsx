@@ -15,10 +15,12 @@ export default async function OwnerClassesPage() {
   const supabase = await createClient();
   const dict = await getDictionary();
 
+  // Instructors that can be assigned to a class: teachers and owners.
+  // In a small academy the owner often teaches too, so they must be selectable.
   const { data: teachers } = await supabase
     .from("profiles")
     .select("id, full_name")
-    .eq("role", "teacher")
+    .in("role", ["teacher", "owner"])
     .order("full_name");
 
   const { data: classes } = await supabase

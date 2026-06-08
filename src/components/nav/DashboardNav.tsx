@@ -9,6 +9,7 @@ import {
   Users,
   GraduationCap,
   History,
+  Presentation,
   LogOut,
   Menu,
   X,
@@ -34,6 +35,9 @@ function itemsForRole(role: Role, dict: Dictionary): NavItem[] {
       { href: "/owner/classes", label: dict.nav.classes, icon: BookOpen },
       { href: "/owner/teachers", label: dict.nav.teachers, icon: Users },
       { href: "/owner/students", label: dict.nav.students, icon: GraduationCap },
+      // Owners who also teach reach their own sessions here (the /teacher
+      // pages already scope to the logged-in user's assigned classes).
+      { href: "/teacher", label: dict.nav.teaching, icon: Presentation },
     ];
   }
   if (role === "teacher") {
