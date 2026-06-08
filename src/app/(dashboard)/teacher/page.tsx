@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Clock } from "lucide-react";
+import { Clock, FolderOpen } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getDictionary } from "@/lib/i18n";
 import { StatsCard } from "@/components/dashboard/StatsCard";
@@ -20,6 +20,12 @@ export default async function TeacherHomePage() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", user?.id ?? "")
+    .single();
 
   const in24h = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
   const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
@@ -44,26 +50,50 @@ export default async function TeacherHomePage() {
     .filter((h) => String(h.month).slice(0, 7) === thisMonth)
     .reduce((sum, h) => sum + Number(h.hours), 0);
 
+  const today = new Date().toLocaleDateString("ko-KR", {
+    month: "long",
+    day: "numeric",
+    weekday: "long",
+  });
+
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">{dict.nav.dashboard}</h1>
-        <Button asChild variant="outline">
-          <Link href="/teacher/classes">{dict.materials.teacherTitle}</Link>
+    <div className="space-y-8">
+      {/* Welcome hero */}
+      <div className="relative overflow-hidden rounded-2xl bg-[#0f1e4a] px-8 py-7 text-white shadow-md">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full opacity-[0.08]"
+          style={{ background: "#F7C905" }}
+        />
+        <p className="text-sm font-medium text-white/50">{today}</p>
+        <h1 className="mt-1 text-2xl font-bold">
+          안녕하세요, {(profile as { full_name?: string } | null)?.full_name?.split(" ")[0] ?? "선생님"} 선생님!
+        </h1>
+        <p className="mt-1 text-sm text-white/60">
+          WELC Academy — 오늘도 좋은 수업 되세요 :)
+        </p>
+        <Button asChild variant="outline" size="sm" className="mt-4 border-white/20 bg-white/10 text-white hover:bg-white/20">
+          <Link href="/teacher/classes">
+            <FolderOpen className="mr-2 h-4 w-4" />
+            {dict.materials.teacherTitle}
+          </Link>
         </Button>
       </div>
 
+      {/* Stats */}
       <div className="grid grid-cols-1 gap-4 sm:max-w-xs">
         <StatsCard
           title={dict.teacher.hoursThisMonth}
           value={monthHours.toFixed(1)}
           icon={Clock}
+          color="yellow"
         />
       </div>
 
-      <Card>
+      {/* Today's sessions */}
+      <Card className="welc-card-glow">
         <CardHeader>
-          <CardTitle>{dict.teacher.todaySessions}</CardTitle>
+          <CardTitle className="text-base">{dict.teacher.todaySessions}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {rows.length === 0 ? (
@@ -74,10 +104,10 @@ export default async function TeacherHomePage() {
             rows.map((s) => (
               <div
                 key={s.id}
-                className="flex flex-col gap-3 rounded-lg border p-4 sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col gap-3 rounded-xl border bg-card p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between"
               >
                 <div>
-                  <p className="font-medium">{s.classes?.name}</p>
+                  <p className="font-semibold">{s.classes?.name}</p>
                   <p className="text-sm text-muted-foreground">
                     {formatDateTime(s.scheduled_at)}
                   </p>
@@ -89,7 +119,7 @@ export default async function TeacherHomePage() {
                   {s.status === "in_progress" && (
                     <>
                       <Badge variant="warning">in progress</Badge>
-                      <Button asChild variant="outline">
+                      <Button asChild variant="outline" size="sm">
                         <Link href={`/teacher/attendance/${s.id}`}>
                           {dict.teacher.markAttendance}
                         </Link>

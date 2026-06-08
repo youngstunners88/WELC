@@ -4,24 +4,34 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222 47% 11%;
+    /* WELC Academy Design System */
+    --background: 46 28% 97%;
+    --foreground: 224 47% 11%;
+
     --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
-    --primary: 222 47% 31%;
-    --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96%;
-    --secondary-foreground: 222 47% 11%;
-    --muted: 210 40% 96%;
-    --muted-foreground: 215 16% 47%;
-    --accent: 160 84% 39%;
-    --accent-foreground: 210 40% 98%;
+    --card-foreground: 224 47% 11%;
+
+    /* Primary = deep WELC navy */
+    --primary: 224 65% 19%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 210 40% 95%;
+    --secondary-foreground: 224 47% 11%;
+
+    --muted: 210 38% 95%;
+    --muted-foreground: 215 16% 46%;
+
+    /* Accent = WELC signature yellow */
+    --accent: 49 96% 50%;
+    --accent-foreground: 224 47% 11%;
+
     --destructive: 0 72% 51%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 222 47% 31%;
-    --radius: 0.5rem;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 30% 89%;
+    --input: 214 30% 89%;
+    --ring: 224 65% 19%;
+    --radius: 0.625rem;
   }
 }
 
@@ -32,5 +42,20 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  h1, h2, h3, h4 {
+    letter-spacing: -0.015em;
+  }
+}
+
+@layer utilities {
+  .welc-card-glow {
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+  }
+  .welc-card-hover {
+    @apply transition-shadow duration-200;
+  }
+  .welc-card-hover:hover {
+    box-shadow: 0 4px 12px 0 rgb(0 0 0 / 0.10), 0 2px 4px -1px rgb(0 0 0 / 0.06);
   }
 }

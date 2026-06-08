@@ -80,14 +80,14 @@ export default async function StudentClassesPage() {
       <h1 className="text-2xl font-bold">{dict.student.myClasses}</h1>
 
       {rows.length === 0 ? (
-        <Card>
+        <Card className="welc-card-glow">
           <CardContent className="py-10 text-center text-sm text-muted-foreground">
             {dict.student.noClasses}
           </CardContent>
         </Card>
       ) : (
         rows.map((c) => (
-          <Card key={c.id}>
+          <Card key={c.id} className="welc-card-glow welc-card-hover">
             <CardHeader>
               <div className="flex items-center justify-between gap-2">
                 <CardTitle>{c.name}</CardTitle>

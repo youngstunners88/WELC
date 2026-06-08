@@ -41,7 +41,7 @@ export default async function DashboardLayout({
     <div className="flex min-h-screen flex-col md:flex-row">
       <DashboardNav role={role} dict={dict} profile={profile} />
       <div className="flex flex-1 flex-col">
-        <header className="flex items-center justify-end gap-3 border-b px-4 py-3">
+        <header className="flex items-center justify-end gap-3 border-b bg-card px-5 py-3 shadow-sm">
           <LanguageToggle current={locale} />
           <NotificationBell
             userId={user.id}
@@ -49,7 +49,7 @@ export default async function DashboardLayout({
             dict={dict}
           />
         </header>
-        <main className="container flex-1 py-6">{children}</main>
+        <main className="container flex-1 py-8">{children}</main>
       </div>
     </div>
   );

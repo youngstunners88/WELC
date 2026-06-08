@@ -1,11 +1,46 @@
 import type { LucideIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
+
+type ColorVariant = "navy" | "yellow" | "green" | "red" | "purple";
+
+const variantStyles: Record<
+  ColorVariant,
+  { icon: string; value: string; border: string }
+> = {
+  navy: {
+    icon: "bg-[#0f1e4a] text-white",
+    value: "text-[#0f1e4a]",
+    border: "border-t-4 border-t-[#0f1e4a]",
+  },
+  yellow: {
+    icon: "bg-[#F7C905] text-[#0f1e4a]",
+    value: "text-[#0f1e4a]",
+    border: "border-t-4 border-t-[#F7C905]",
+  },
+  green: {
+    icon: "bg-emerald-500 text-white",
+    value: "text-emerald-700",
+    border: "border-t-4 border-t-emerald-500",
+  },
+  red: {
+    icon: "bg-rose-500 text-white",
+    value: "text-rose-700",
+    border: "border-t-4 border-t-rose-500",
+  },
+  purple: {
+    icon: "bg-violet-500 text-white",
+    value: "text-violet-700",
+    border: "border-t-4 border-t-violet-500",
+  },
+};
 
 interface StatsCardProps {
   title: string;
   value: string | number;
   icon: LucideIcon;
   description?: string;
+  color?: ColorVariant;
 }
 
 export function StatsCard({
@@ -13,16 +48,22 @@ export function StatsCard({
   value,
   icon: Icon,
   description,
+  color = "navy",
 }: StatsCardProps) {
+  const styles = variantStyles[color];
   return (
-    <Card>
+    <Card className={cn("welc-card-glow welc-card-hover overflow-hidden", styles.border)}>
       <CardContent className="flex items-center gap-4 p-5">
-        <div className="rounded-md bg-primary/10 p-3 text-primary">
+        <div className={cn("rounded-xl p-3 shadow-sm", styles.icon)}>
           <Icon className="h-6 w-6" />
         </div>
         <div className="min-w-0">
-          <p className="truncate text-sm text-muted-foreground">{title}</p>
-          <p className="text-2xl font-bold">{value}</p>
+          <p className="truncate text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            {title}
+          </p>
+          <p className={cn("text-3xl font-bold tabular-nums", styles.value)}>
+            {value}
+          </p>
           {description && (
             <p className="text-xs text-muted-foreground">{description}</p>
           )}

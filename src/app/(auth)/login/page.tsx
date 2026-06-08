@@ -1,24 +1,21 @@
 import { getDictionary } from "@/lib/i18n";
 import { LoginForm } from "@/components/auth/LoginForm";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { WelcMark } from "@/components/brand/WelcMark";
 
 export default async function LoginPage() {
   const dict = await getDictionary();
   return (
-    <Card className="w-full max-w-sm">
-      <CardHeader className="text-center">
-        <CardTitle>{dict.brand.name}</CardTitle>
-        <CardDescription>{dict.brand.tagline}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <LoginForm dict={dict} />
-      </CardContent>
-    </Card>
+    <div className="w-full max-w-sm space-y-8">
+      {/* Mark + heading */}
+      <div className="space-y-2">
+        <WelcMark className="h-12" />
+        <h1 className="text-2xl font-bold tracking-tight">
+          {dict.auth.welcomeBack ?? "Welcome back"}
+        </h1>
+        <p className="text-sm text-muted-foreground">{dict.brand.tagline}</p>
+      </div>
+
+      <LoginForm dict={dict} />
+    </div>
   );
 }

@@ -36,8 +36,6 @@ function itemsForRole(role: Role, dict: Dictionary): NavItem[] {
       { href: "/owner/classes", label: dict.nav.classes, icon: BookOpen },
       { href: "/owner/people", label: dict.nav.people, icon: Users },
       { href: "/owner/attendance", label: dict.nav.attendance, icon: ClipboardList },
-      // Owners who also teach reach their own sessions here (the /teacher
-      // pages already scope to the logged-in user's assigned classes).
       { href: "/teacher", label: dict.nav.teaching, icon: Presentation },
     ];
   }
@@ -53,6 +51,10 @@ function itemsForRole(role: Role, dict: Dictionary): NavItem[] {
   ];
 }
 
+function roleLabel(role: Role, dict: Dictionary) {
+  return dict.roles[role];
+}
+
 export function DashboardNav({
   role,
   dict,
@@ -66,14 +68,25 @@ export function DashboardNav({
   const [open, setOpen] = useState(false);
   const items = itemsForRole(role, dict);
 
+  const initials = (profile.full_name ?? "?")
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .toUpperCase()
+    .slice(0, 2);
+
   return (
     <>
-      {/* Mobile bar */}
-      <div className="flex items-center justify-between border-b p-4 md:hidden">
-        <WelcMark className="h-8" />
+      {/* Mobile top bar */}
+      <div className="flex items-center justify-between border-b bg-[#0f1e4a] px-4 py-3 md:hidden">
+        <div className="flex items-center gap-2">
+          <WelcMark className="h-8" />
+          <span className="font-bold text-white">WELC</span>
+        </div>
         <Button
           variant="ghost"
           size="icon"
+          className="text-white/80 hover:bg-white/10 hover:text-white"
           onClick={() => setOpen((v) => !v)}
           aria-label="Menu"
         >
@@ -83,47 +96,63 @@ export function DashboardNav({
 
       <nav
         className={cn(
-          "flex-col gap-1 border-r bg-card p-4 md:flex md:w-64",
+          "flex-col gap-0.5 bg-[#0f1e4a] p-4 md:flex md:w-64 md:min-h-screen",
           open ? "flex" : "hidden"
         )}
       >
-        <div className="mb-6 hidden items-center gap-2 md:flex">
-          <WelcMark className="h-9" />
-          <span className="font-bold">{dict.brand.name}</span>
+        {/* Logo */}
+        <div className="mb-6 hidden items-center gap-3 md:flex">
+          <WelcMark className="h-10" />
+          <div className="leading-tight">
+            <p className="font-bold text-white">WELC Academy</p>
+            <p className="text-[11px] text-white/50">영어 라이프 컨설팅</p>
+          </div>
         </div>
 
-        <div className="mb-4 rounded-md bg-muted/60 px-3 py-2">
-          <p className="truncate text-sm font-medium">{profile.full_name}</p>
-          <p className="text-xs text-muted-foreground">{dict.roles[role]}</p>
+        {/* Profile chip */}
+        <div className="mb-5 flex items-center gap-3 rounded-xl bg-white/10 px-3 py-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F7C905] text-sm font-bold text-[#0f1e4a]">
+            {initials}
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-semibold text-white">
+              {profile.full_name}
+            </p>
+            <p className="text-xs text-white/50">{roleLabel(role, dict)}</p>
+          </div>
         </div>
 
-        {items.map((item) => {
-          const active =
-            pathname === item.href || pathname.startsWith(item.href + "/");
-          const Icon = item.icon;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              onClick={() => setOpen(false)}
-              className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium transition-colors",
-                active
-                  ? "bg-primary text-primary-foreground"
-                  : "hover:bg-accent hover:text-accent-foreground"
-              )}
-            >
-              <Icon className="h-4 w-4" />
-              {item.label}
-            </Link>
-          );
-        })}
+        {/* Nav links */}
+        <div className="flex flex-col gap-0.5">
+          {items.map((item) => {
+            const active =
+              pathname === item.href || pathname.startsWith(item.href + "/");
+            const Icon = item.icon;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                onClick={() => setOpen(false)}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                  active
+                    ? "bg-[#F7C905] text-[#0f1e4a]"
+                    : "text-white/70 hover:bg-white/10 hover:text-white"
+                )}
+              >
+                <Icon className="h-4 w-4 shrink-0" />
+                {item.label}
+              </Link>
+            );
+          })}
+        </div>
 
-        <form action={signOut} className="mt-auto pt-4">
+        {/* Sign out */}
+        <form action={signOut} className="mt-auto pt-6">
           <Button
             type="submit"
             variant="ghost"
-            className="w-full justify-start gap-3 text-muted-foreground"
+            className="w-full justify-start gap-3 text-white/50 hover:bg-white/10 hover:text-white"
           >
             <LogOut className="h-4 w-4" />
             {dict.nav.logout}
