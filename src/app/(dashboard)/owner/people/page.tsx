@@ -21,6 +21,12 @@ export default async function OwnerPeoplePage() {
     .order("role")
     .order("full_name");
 
+  // Referral attribution — isolated so a pre-migration DB (no referred_by
+  // column) leaves the rest of the page fully functional.
+  const { data: refRows } = await supabase
+    .from("profiles")
+    .select("id, referred_by");
+
   const { data: studentRows } = await supabase
     .from("v_student_attendance")
     .select("student_id, attendance_rate");
@@ -47,6 +53,15 @@ export default async function OwnerPeoplePage() {
       h.teacher_id,
       (hoursByTeacher.get(h.teacher_id) ?? 0) + Number(h.hours)
     );
+  }
+
+  const nameById = new Map(all.map((p) => [p.id, p.full_name]));
+  const referrerByStudent = new Map<string, string>();
+  for (const r of (refRows as { id: string; referred_by: string | null }[] | null) ??
+    []) {
+    if (r.referred_by) {
+      referrerByStudent.set(r.id, nameById.get(r.referred_by) ?? "—");
+    }
   }
 
   const pending = all.filter((p) => p.status === "pending");
@@ -117,6 +132,9 @@ export default async function OwnerPeoplePage() {
                 <th className="py-2 pr-4 font-medium">{dict.manage.email}</th>
                 <th className="py-2 pr-4 font-medium">{dict.manage.role}</th>
                 <th className="py-2 pr-4 font-medium">{dict.manage.detail}</th>
+                <th className="py-2 pr-4 font-medium">
+                  {dict.referral.referredVia}
+                </th>
                 <th className="py-2 pr-4 font-medium">{dict.manage.actions}</th>
               </tr>
             </thead>
@@ -144,6 +162,9 @@ export default async function OwnerPeoplePage() {
                     )}
                   </td>
                   <td className="py-2 pr-4 text-muted-foreground">{detail(p)}</td>
+                  <td className="py-2 pr-4 text-muted-foreground">
+                    {referrerByStudent.get(p.id) ?? "—"}
+                  </td>
                   <td className="py-2 pr-4">
                     <UserRoleActions
                       userId={p.id}

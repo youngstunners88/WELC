@@ -11,6 +11,7 @@ import {
   Presentation,
   ClipboardList,
   FolderOpen,
+  Settings,
   LogOut,
   Menu,
   X,
@@ -109,18 +110,23 @@ export function DashboardNav({
           </div>
         </div>
 
-        {/* Profile chip */}
-        <div className="mb-5 flex items-center gap-3 rounded-xl bg-white/10 px-3 py-3">
+        {/* Profile chip — links to settings */}
+        <Link
+          href="/settings"
+          onClick={() => setOpen(false)}
+          className="mb-5 flex items-center gap-3 rounded-xl bg-white/10 px-3 py-3 transition-colors hover:bg-white/[0.16]"
+        >
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F7C905] text-sm font-bold text-[#0f1e4a]">
             {initials}
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-semibold text-white">
               {profile.full_name}
             </p>
             <p className="text-xs text-white/50">{roleLabel(role, dict)}</p>
           </div>
-        </div>
+          <Settings className="h-4 w-4 shrink-0 text-white/40" />
+        </Link>
 
         {/* Nav links */}
         <div className="flex flex-col gap-0.5">

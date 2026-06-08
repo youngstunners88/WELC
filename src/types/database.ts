@@ -24,6 +24,7 @@ export interface Profile {
   role: Role;
   requested_role: "teacher" | "student" | null;
   status: "active" | "pending";
+  referred_by: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -125,6 +126,18 @@ export interface Material {
   storage_path: string | null;
   url: string | null;
   created_at: string;
+}
+
+/** v_teacher_students */
+export interface TeacherStudentRow {
+  teacher_id: string;
+  student_id: string;
+  student_name: string;
+  student_email: string;
+  joined_at: string;
+  attended: number;
+  total: number;
+  attendance_rate: number | null;
 }
 
 /** v_session_attendance */

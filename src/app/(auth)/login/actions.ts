@@ -23,19 +23,32 @@ export async function signIn(email: string, password: string) {
   redirect("/student/classes");
 }
 
+function isUuid(v: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+    v
+  );
+}
+
 export async function signUp(
   email: string,
   password: string,
   fullName: string,
-  requestedRole: "teacher" | "student" = "student"
+  requestedRole: "teacher" | "student" = "student",
+  referredBy?: string
 ) {
   const supabase = await createClient();
+  const data: Record<string, string> = {
+    full_name: fullName,
+    requested_role: requestedRole,
+  };
+  // Attribution: only forward a well-formed teacher id. The DB trigger
+  // additionally verifies it belongs to a real teacher/owner before storing.
+  if (referredBy && isUuid(referredBy)) data.referred_by = referredBy;
+
   const { error } = await supabase.auth.signUp({
     email,
     password,
-    options: {
-      data: { full_name: fullName, requested_role: requestedRole },
-    },
+    options: { data },
   });
   if (error) return { error: error.message };
   // Effective role is always 'student' on signup (DB trigger). A teacher

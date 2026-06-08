@@ -2,8 +2,14 @@ import { getDictionary } from "@/lib/i18n";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { WelcMark } from "@/components/brand/WelcMark";
 
-export default async function LoginPage() {
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: { ref?: string };
+}) {
   const dict = await getDictionary();
+  const referredBy =
+    typeof searchParams.ref === "string" ? searchParams.ref : undefined;
   return (
     <div className="w-full max-w-sm space-y-8">
       {/* Mark + heading */}
@@ -15,7 +21,7 @@ export default async function LoginPage() {
         <p className="text-sm text-muted-foreground">{dict.brand.tagline}</p>
       </div>
 
-      <LoginForm dict={dict} />
+      <LoginForm dict={dict} referredBy={referredBy} />
     </div>
   );
 }

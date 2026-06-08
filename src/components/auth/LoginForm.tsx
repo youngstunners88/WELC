@@ -10,8 +10,16 @@ import { Label } from "@/components/ui/label";
 import { Select } from "@/components/ui/select";
 import type { Dictionary } from "@/lib/i18n";
 
-export function LoginForm({ dict }: { dict: Dictionary }) {
-  const [mode, setMode] = useState<"login" | "signup">("login");
+export function LoginForm({
+  dict,
+  referredBy,
+}: {
+  dict: Dictionary;
+  referredBy?: string;
+}) {
+  const [mode, setMode] = useState<"login" | "signup">(
+    referredBy ? "signup" : "login"
+  );
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
@@ -32,7 +40,13 @@ export function LoginForm({ dict }: { dict: Dictionary }) {
         return;
       }
 
-      const result = await signUp(email, password, fullName, requestedRole);
+      const result = await signUp(
+        email,
+        password,
+        fullName,
+        requestedRole,
+        referredBy
+      );
       if (result?.error) {
         toast.error(result.error);
         return;
@@ -44,6 +58,11 @@ export function LoginForm({ dict }: { dict: Dictionary }) {
 
   return (
     <form action={onSubmit} className="space-y-4">
+      {mode === "signup" && referredBy && (
+        <div className="rounded-lg border border-[#F7C905]/40 bg-[#F7C905]/10 px-3 py-2 text-sm text-foreground">
+          {dict.referral.invitedBy} ✓
+        </div>
+      )}
       {mode === "signup" && (
         <>
           <div className="space-y-1.5">

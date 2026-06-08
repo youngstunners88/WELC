@@ -28,6 +28,24 @@ export async function endSession(sessionId: string) {
   return { success: true };
 }
 
+export async function logSession(sessionId: string, minutes: number) {
+  if (!Number.isFinite(minutes) || minutes <= 0 || minutes > 600) {
+    return { error: "Duration must be between 1 and 600 minutes" };
+  }
+  const auth = await requireRoleAction(["owner", "teacher"]);
+  if (!auth.ok) return { error: auth.error };
+
+  const { error } = await auth.supabase.rpc("rpc_log_session", {
+    p_session_id: sessionId,
+    p_minutes: Math.round(minutes),
+  });
+  if (error) return { error: error.message };
+  revalidatePath("/teacher");
+  revalidatePath("/owner");
+  revalidatePath("/owner/attendance");
+  return { success: true };
+}
+
 export async function markAttendance(
   sessionId: string,
   studentId: string,
