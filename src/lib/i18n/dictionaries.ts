@@ -154,6 +154,8 @@ export const en = {
     download: "Download",
     delete: "Delete",
     forStudents: "Shared with students in this class",
+    tooLarge: "File is too large (max 25 MB).",
+    badType: "That file type isn't allowed.",
   },
 };
 
@@ -313,6 +315,8 @@ export const ko: typeof en = {
     download: "다운로드",
     delete: "삭제",
     forStudents: "이 수업의 학생에게 공유됨",
+    tooLarge: "파일이 너무 큽니다 (최대 25MB).",
+    badType: "허용되지 않는 파일 형식입니다.",
   },
 };
 

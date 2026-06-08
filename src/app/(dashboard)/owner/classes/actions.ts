@@ -1,7 +1,7 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { requireRoleAction } from "@/lib/auth/guard";
 import { classSchema } from "@/lib/validation/classSchema";
 import { generateWeeklySessions } from "@/lib/sessions";
 
@@ -11,15 +11,13 @@ export async function createClass(formData: unknown) {
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Not authenticated" };
+  const auth = await requireRoleAction(["owner"]);
+  if (!auth.ok) return { error: auth.error };
+  const { supabase, userId } = auth;
 
   const { data: cls, error: classError } = await supabase
     .from("classes")
-    .insert({ ...parsed.data, created_by: user.id })
+    .insert({ ...parsed.data, created_by: userId })
     .select()
     .single();
 

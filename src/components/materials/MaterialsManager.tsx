@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { FileText, LinkIcon, Trash2, Upload } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import {
+  ALLOWED_MATERIAL_EXTENSIONS,
+  MAX_MATERIAL_BYTES,
+} from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -51,6 +55,15 @@ export function MaterialsManager({
     if (!file) return;
     if (!title.trim()) {
       toast.error(dict.materials.titleLabel + " ?");
+      return;
+    }
+    if (file.size > MAX_MATERIAL_BYTES) {
+      toast.error(dict.materials.tooLarge);
+      return;
+    }
+    const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
+    if (!ALLOWED_MATERIAL_EXTENSIONS.includes(ext as never)) {
+      toast.error(dict.materials.badType);
       return;
     }
     setUploading(true);

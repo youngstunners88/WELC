@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { requireRoleAction } from "@/lib/auth/guard";
+import { ATTENDANCE_MARKS } from "@/lib/constants";
 import type { AttendanceMark } from "@/types/database";
 
 export async function startSession(sessionId: string) {
@@ -31,8 +33,14 @@ export async function markAttendance(
   studentId: string,
   mark: AttendanceMark
 ) {
-  const supabase = await createClient();
-  const { error } = await supabase
+  if (!ATTENDANCE_MARKS.includes(mark)) return { error: "Invalid mark" };
+
+  // Only teachers/owners may mark; RLS further restricts to the session's own
+  // teacher, so an owner can only mark sessions for classes they teach.
+  const auth = await requireRoleAction(["owner", "teacher"]);
+  if (!auth.ok) return { error: auth.error };
+
+  const { error } = await auth.supabase
     .from("attendance")
     .upsert(
       { session_id: sessionId, student_id: studentId, mark },

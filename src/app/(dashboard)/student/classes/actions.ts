@@ -23,10 +23,18 @@ export async function commitToSession(sessionId: string) {
 
 export async function uncommitFromSession(commitmentId: string) {
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return { error: "Not authenticated" };
+
+  // Scope the update to the caller's own commitment as well — RLS already
+  // enforces this, but the explicit filter makes the intent unmistakable.
   const { error } = await supabase
     .from("commitments")
     .update({ status: "uncommitted" })
-    .eq("id", commitmentId);
+    .eq("id", commitmentId)
+    .eq("student_id", user.id);
   // The DB trigger enforces the 2-hour uncommit cutoff.
   if (error) return { error: error.message };
   revalidatePath("/student/classes");

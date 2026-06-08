@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { WelcIllustration } from "@/components/brand/WelcIllustration";
 
 /**
  * WELC speech-bubble mark — yellow bubble with italic "we(c" inside.
@@ -70,6 +71,8 @@ export function WelcBrandPanel() {
       </div>
 
       <div className="relative z-10 space-y-6">
+        <WelcIllustration className="mx-auto max-w-[280px]" />
+
         <blockquote className="border-l-4 border-[#F7C905] pl-4">
           <p className="text-xl font-semibold leading-snug">
             &ldquo;WELC와 함께<br />영어를 생활화해 보아요!&rdquo;

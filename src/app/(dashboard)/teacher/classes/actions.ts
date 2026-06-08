@@ -1,7 +1,30 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
+import { requireRoleAction } from "@/lib/auth/guard";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+/**
+ * Confirms the caller may manage materials for `classId`: owners always may;
+ * teachers only for classes they teach. Returns null when allowed, else an
+ * error string. Defense-in-depth on top of the materials RLS policies.
+ */
+async function canManageClass(
+  supabase: SupabaseClient,
+  role: string,
+  userId: string,
+  classId: string
+): Promise<string | null> {
+  if (role === "owner") return null;
+  const { data } = await supabase
+    .from("classes")
+    .select("teacher_id")
+    .eq("id", classId)
+    .single<{ teacher_id: string }>();
+  if (!data) return "Class not found";
+  if (data.teacher_id !== userId) return "Not authorized for this class";
+  return null;
+}
 
 export async function addLinkMaterial(
   classId: string,
@@ -9,17 +32,22 @@ export async function addLinkMaterial(
   url: string
 ) {
   if (!title.trim()) return { error: "Title is required" };
-  if (!/^https?:\/\//i.test(url)) return { error: "Link must start with http(s)://" };
+  if (!/^https?:\/\//i.test(url))
+    return { error: "Link must start with http(s)://" };
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Not authenticated" };
+  const auth = await requireRoleAction(["owner", "teacher"]);
+  if (!auth.ok) return { error: auth.error };
+  const denied = await canManageClass(
+    auth.supabase,
+    auth.role,
+    auth.userId,
+    classId
+  );
+  if (denied) return { error: denied };
 
-  const { error } = await supabase.from("materials").insert({
+  const { error } = await auth.supabase.from("materials").insert({
     class_id: classId,
-    uploaded_by: user.id,
+    uploaded_by: auth.userId,
     title: title.trim(),
     kind: "link",
     url,
@@ -36,15 +64,20 @@ export async function addFileMaterial(
   storagePath: string
 ) {
   if (!title.trim()) return { error: "Title is required" };
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return { error: "Not authenticated" };
 
-  const { error } = await supabase.from("materials").insert({
+  const auth = await requireRoleAction(["owner", "teacher"]);
+  if (!auth.ok) return { error: auth.error };
+  const denied = await canManageClass(
+    auth.supabase,
+    auth.role,
+    auth.userId,
+    classId
+  );
+  if (denied) return { error: denied };
+
+  const { error } = await auth.supabase.from("materials").insert({
     class_id: classId,
-    uploaded_by: user.id,
+    uploaded_by: auth.userId,
     title: title.trim(),
     kind: "file",
     storage_path: storagePath,
@@ -56,19 +89,34 @@ export async function addFileMaterial(
 }
 
 export async function deleteMaterial(materialId: string) {
-  const supabase = await createClient();
+  const auth = await requireRoleAction(["owner", "teacher"]);
+  if (!auth.ok) return { error: auth.error };
+  const { supabase } = auth;
 
-  // Remove the underlying file too (if any) before deleting the row.
+  // Load the row first so we can verify class ownership and clean up storage.
   const { data: mat } = await supabase
     .from("materials")
-    .select("storage_path")
+    .select("class_id, storage_path")
     .eq("id", materialId)
-    .single();
-  if (mat?.storage_path) {
+    .single<{ class_id: string; storage_path: string | null }>();
+  if (!mat) return { error: "Material not found" };
+
+  const denied = await canManageClass(
+    supabase,
+    auth.role,
+    auth.userId,
+    mat.class_id
+  );
+  if (denied) return { error: denied };
+
+  if (mat.storage_path) {
     await supabase.storage.from("class-materials").remove([mat.storage_path]);
   }
 
-  const { error } = await supabase.from("materials").delete().eq("id", materialId);
+  const { error } = await supabase
+    .from("materials")
+    .delete()
+    .eq("id", materialId);
   if (error) return { error: error.message };
   revalidatePath("/teacher/classes");
   revalidatePath("/student/classes");
