@@ -108,7 +108,7 @@ export function AiAssistant({
         onClick={() => setOpen((v) => !v)}
         aria-label={dict.ai.title}
         className={cn(
-          "fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#0f1e4a] text-[#F7C905] shadow-lg transition-transform hover:scale-105",
+          "fixed bottom-5 right-5 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#0f1e4a] text-[#F7C905] shadow-lg transition-transform hover:scale-105 print:hidden",
           open && "scale-0"
         )}
       >
@@ -118,7 +118,7 @@ export function AiAssistant({
       {/* Panel */}
       <div
         className={cn(
-          "fixed bottom-5 right-5 z-50 flex w-[calc(100vw-2.5rem)] max-w-sm flex-col overflow-hidden rounded-2xl border bg-card shadow-2xl transition-all sm:w-96",
+          "fixed bottom-5 right-5 z-50 flex w-[calc(100vw-2.5rem)] max-w-sm flex-col overflow-hidden rounded-2xl border bg-card shadow-2xl transition-all sm:w-96 print:hidden",
           open
             ? "pointer-events-auto h-[32rem] max-h-[80vh] opacity-100"
             : "pointer-events-none h-0 opacity-0"

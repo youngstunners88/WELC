@@ -14,6 +14,8 @@ import {
   Wallet,
   Bell,
   CalendarDays,
+  FileText,
+  BookMarked,
   Settings,
   LogOut,
   Menu,
@@ -31,6 +33,7 @@ interface NavItem {
   href: string;
   label: string;
   icon: typeof LayoutDashboard;
+  badge?: string;
 }
 
 function itemsForRole(role: Role, dict: Dictionary): NavItem[] {
@@ -42,7 +45,14 @@ function itemsForRole(role: Role, dict: Dictionary): NavItem[] {
       { href: "/owner/attendance", label: dict.nav.attendance, icon: ClipboardList },
       { href: "/calendar", label: dict.nav.calendar, icon: CalendarDays },
       { href: "/owner/reminders", label: dict.nav.reminders, icon: Bell },
+      { href: "/owner/reports", label: dict.nav.reports, icon: FileText },
       { href: "/owner/revenue", label: dict.nav.revenue, icon: Wallet },
+      {
+        href: "/owner/notebook",
+        label: dict.nav.notebook,
+        icon: BookMarked,
+        badge: dict.notebook.badge,
+      },
       { href: "/teacher", label: dict.nav.teaching, icon: Presentation },
     ];
   }
@@ -87,7 +97,7 @@ export function DashboardNav({
   return (
     <>
       {/* Mobile top bar */}
-      <div className="flex items-center justify-between border-b bg-[#0f1e4a] px-4 py-3 md:hidden">
+      <div className="flex items-center justify-between border-b bg-[#0f1e4a] px-4 py-3 md:hidden print:hidden">
         <div className="flex items-center gap-2">
           <WelcMark className="h-8" />
           <span className="font-bold text-white">WELC</span>
@@ -105,7 +115,7 @@ export function DashboardNav({
 
       <nav
         className={cn(
-          "flex-col gap-0.5 bg-[#0f1e4a] p-4 md:flex md:w-64 md:min-h-screen",
+          "flex-col gap-0.5 bg-[#0f1e4a] p-4 md:flex md:w-64 md:min-h-screen print:hidden",
           open ? "flex" : "hidden"
         )}
       >
@@ -155,7 +165,12 @@ export function DashboardNav({
                 )}
               >
                 <Icon className="h-4 w-4 shrink-0" />
-                {item.label}
+                <span className="flex-1">{item.label}</span>
+                {item.badge && (
+                  <span className="rounded-full bg-[#F7C905] px-1.5 py-0.5 text-[10px] font-bold text-[#0f1e4a]">
+                    {item.badge}
+                  </span>
+                )}
               </Link>
             );
           })}
