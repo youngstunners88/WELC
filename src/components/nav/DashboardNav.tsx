@@ -11,6 +11,7 @@ import {
   Presentation,
   ClipboardList,
   FolderOpen,
+  Wallet,
   Settings,
   LogOut,
   Menu,
@@ -37,6 +38,7 @@ function itemsForRole(role: Role, dict: Dictionary): NavItem[] {
       { href: "/owner/classes", label: dict.nav.classes, icon: BookOpen },
       { href: "/owner/people", label: dict.nav.people, icon: Users },
       { href: "/owner/attendance", label: dict.nav.attendance, icon: ClipboardList },
+      { href: "/owner/revenue", label: dict.nav.revenue, icon: Wallet },
       { href: "/teacher", label: dict.nav.teaching, icon: Presentation },
     ];
   }

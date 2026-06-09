@@ -4,6 +4,7 @@ import { getDictionary, getLocale } from "@/lib/i18n";
 import { DashboardNav } from "@/components/nav/DashboardNav";
 import { NotificationBell } from "@/components/nav/NotificationBell";
 import { LanguageToggle } from "@/components/nav/LanguageToggle";
+import { AiAssistant } from "@/components/ai/AiAssistant";
 import type { Notification, Profile } from "@/types/database";
 import type { Role } from "@/lib/constants";
 
@@ -51,6 +52,7 @@ export default async function DashboardLayout({
         </header>
         <main className="container flex-1 py-8">{children}</main>
       </div>
+      <AiAssistant role={role} dict={dict} locale={locale} />
     </div>
   );
 }

@@ -20,6 +20,7 @@ export const en = {
     people: "People",
     attendance: "Attendance",
     materials: "Materials",
+    revenue: "Revenue",
     logout: "Sign out",
   },
   roles: { owner: "Owner", teacher: "Teacher", student: "Student" },
@@ -190,6 +191,58 @@ export const en = {
     logged: "Session logged",
     pastBadge: "Not logged",
   },
+  ai: {
+    title: "WELC Assistant",
+    subtitle: "Ask about your academy",
+    greeting:
+      "Hi! Ask me about teacher hours, attendance, today's classes, or at-risk students.",
+    placeholder: "Type your question…",
+    voice: "Voice input",
+    noVoice: "Voice input isn't supported in this browser.",
+    suggestions: {
+      owner: [
+        "How many hours did each teacher work this month?",
+        "Which students are at risk?",
+        "What classes are scheduled today?",
+        "What's our attendance rate?",
+      ],
+      teacher: [
+        "What classes do I have today?",
+        "Which of my students are at risk?",
+        "How many hours have I taught this month?",
+      ],
+      student: [
+        "What's my attendance rate?",
+        "What classes do I have today?",
+      ],
+    } as Record<string, string[]>,
+  },
+  revenue: {
+    title: "Revenue & Payroll",
+    beta: "Optional",
+    subtitle:
+      "A private projection of teacher payroll and tuition revenue. Nothing is shared — it lives only in your browser until you enable it.",
+    enable: "Use my real data",
+    disable: "Hide / disable",
+    preview: "Preview",
+    previewNote:
+      "Preview mode — showing sample figures. Click “Use my real data” to project from this month's actual teaching hours.",
+    enabledNote:
+      "Live mode — figures below use this month's real teaching hours and your rates. Only you can see this.",
+    settings: "Rates",
+    hourlyRate: "Teacher pay per hour (KRW)",
+    tuitionPerStudent: "Tuition per student / month (KRW)",
+    payrollTitle: "Teacher payroll — this month",
+    teacher: "Teacher",
+    hours: "Hours",
+    estPay: "Estimated pay",
+    totalPayroll: "Total payroll",
+    estRevenue: "Estimated revenue",
+    netEstimate: "Net (est.)",
+    students: "Active students",
+    noData: "No teaching hours logged this month yet.",
+    disclaimer: "Estimates only — not invoices or actual payments.",
+  },
 };
 
 export const ko: typeof en = {
@@ -214,6 +267,7 @@ export const ko: typeof en = {
     people: "사용자",
     attendance: "출석",
     materials: "자료",
+    revenue: "매출",
     logout: "로그아웃",
   },
   roles: { owner: "원장", teacher: "강사", student: "학생" },
@@ -383,6 +437,55 @@ export const ko: typeof en = {
     confirm: "수업 기록",
     logged: "수업이 기록되었습니다",
     pastBadge: "미기록",
+  },
+  ai: {
+    title: "WELC 어시스턴트",
+    subtitle: "학원 데이터를 물어보세요",
+    greeting:
+      "안녕하세요! 강사 근무 시간, 출석률, 오늘 수업, 위험 학생 등을 물어보세요.",
+    placeholder: "질문을 입력하세요…",
+    voice: "음성 입력",
+    noVoice: "이 브라우저에서는 음성 입력을 지원하지 않습니다.",
+    suggestions: {
+      owner: [
+        "이번 달 강사별 근무 시간은?",
+        "위험 학생은 누구인가요?",
+        "오늘 예정된 수업은?",
+        "전체 출석률은 얼마인가요?",
+      ],
+      teacher: [
+        "오늘 제 수업은 무엇인가요?",
+        "제 학생 중 위험 학생은?",
+        "이번 달 제 수업 시간은?",
+      ],
+      student: ["제 출석률은 얼마인가요?", "오늘 제 수업은?"],
+    } as Record<string, string[]>,
+  },
+  revenue: {
+    title: "매출 및 급여",
+    beta: "선택 기능",
+    subtitle:
+      "강사 급여와 수강료 매출을 추정하는 개인용 기능입니다. 활성화 전까지는 브라우저에만 저장되며 공유되지 않습니다.",
+    enable: "실제 데이터 사용",
+    disable: "숨기기 / 비활성화",
+    preview: "미리보기",
+    previewNote:
+      "미리보기 모드 — 샘플 수치입니다. '실제 데이터 사용'을 누르면 이번 달 실제 수업 시간으로 계산합니다.",
+    enabledNote:
+      "실시간 모드 — 아래 수치는 이번 달 실제 수업 시간과 설정한 단가로 계산됩니다. 원장님만 볼 수 있습니다.",
+    settings: "단가 설정",
+    hourlyRate: "강사 시급 (원)",
+    tuitionPerStudent: "학생 1인당 월 수강료 (원)",
+    payrollTitle: "이번 달 강사 급여",
+    teacher: "강사",
+    hours: "시간",
+    estPay: "예상 급여",
+    totalPayroll: "총 급여",
+    estRevenue: "예상 매출",
+    netEstimate: "순이익 (추정)",
+    students: "활성 학생",
+    noData: "이번 달 기록된 수업 시간이 없습니다.",
+    disclaimer: "추정치이며 실제 청구서나 결제가 아닙니다.",
   },
 };
 
