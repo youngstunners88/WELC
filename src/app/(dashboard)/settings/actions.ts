@@ -29,3 +29,17 @@ export async function updateProfile(fullName: string, phone: string) {
   revalidatePath("/", "layout");
   return { success: true };
 }
+
+/** Toggle KakaoTalk reminder consent. Isolated so it degrades gracefully if the
+ *  20260608 migration hasn't been applied yet. */
+export async function updateKakaoConsent(consent: boolean) {
+  const auth = await requireRoleAction();
+  if (!auth.ok) return { error: auth.error };
+  const { error } = await auth.supabase
+    .from("profiles")
+    .update({ kakao_alimtalk_consent: consent })
+    .eq("id", auth.userId);
+  if (error) return { error: error.message };
+  revalidatePath("/settings");
+  return { success: true };
+}

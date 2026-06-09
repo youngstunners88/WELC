@@ -12,6 +12,8 @@ import {
   ClipboardList,
   FolderOpen,
   Wallet,
+  Bell,
+  CalendarDays,
   Settings,
   LogOut,
   Menu,
@@ -38,6 +40,8 @@ function itemsForRole(role: Role, dict: Dictionary): NavItem[] {
       { href: "/owner/classes", label: dict.nav.classes, icon: BookOpen },
       { href: "/owner/people", label: dict.nav.people, icon: Users },
       { href: "/owner/attendance", label: dict.nav.attendance, icon: ClipboardList },
+      { href: "/calendar", label: dict.nav.calendar, icon: CalendarDays },
+      { href: "/owner/reminders", label: dict.nav.reminders, icon: Bell },
       { href: "/owner/revenue", label: dict.nav.revenue, icon: Wallet },
       { href: "/teacher", label: dict.nav.teaching, icon: Presentation },
     ];
@@ -45,11 +49,13 @@ function itemsForRole(role: Role, dict: Dictionary): NavItem[] {
   if (role === "teacher") {
     return [
       { href: "/teacher", label: dict.nav.dashboard, icon: LayoutDashboard },
+      { href: "/calendar", label: dict.nav.calendar, icon: CalendarDays },
       { href: "/teacher/classes", label: dict.nav.materials, icon: FolderOpen },
     ];
   }
   return [
     { href: "/student/classes", label: dict.nav.classes, icon: BookOpen },
+    { href: "/calendar", label: dict.nav.calendar, icon: CalendarDays },
     { href: "/student/history", label: dict.nav.history, icon: History },
   ];
 }

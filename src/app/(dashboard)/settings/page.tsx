@@ -2,6 +2,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getDictionary } from "@/lib/i18n";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProfileForm } from "@/components/settings/ProfileForm";
+import { KakaoPrefs } from "@/components/settings/KakaoPrefs";
 import type { Profile } from "@/types/database";
 
 export default async function SettingsPage() {
@@ -29,6 +30,24 @@ export default async function SettingsPage() {
             initialName={profile?.full_name ?? ""}
             initialPhone={profile?.phone ?? ""}
             email={profile?.email ?? user?.email ?? ""}
+            dict={dict}
+          />
+        </CardContent>
+      </Card>
+
+      <Card className="welc-card-glow">
+        <CardHeader>
+          <CardTitle className="text-base">
+            {dict.settings.notifications}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <KakaoPrefs
+            initialConsent={Boolean(
+              (profile as Profile & { kakao_alimtalk_consent?: boolean })
+                ?.kakao_alimtalk_consent
+            )}
+            hasPhone={Boolean(profile?.phone)}
             dict={dict}
           />
         </CardContent>

@@ -104,6 +104,31 @@ export const toolExecutors: Record<string, Executor> = {
     if (error) return { ok: false, note: error.message };
     return { ok: true, data };
   },
+
+  // Write action (owner/teacher only — enforced inside the RPC). Sends an in-app
+  // reminder now; AlimTalk fan-out is handled by the dashboard send path.
+  async send_reminder(supabase, args) {
+    const audience = ["session", "tomorrow", "all_students"].includes(
+      String(args.audience)
+    )
+      ? String(args.audience)
+      : "tomorrow";
+    const message =
+      typeof args.message === "string" ? args.message.trim() : "";
+    if (!message) return { ok: false, note: "A message is required." };
+    const session_id =
+      typeof args.session_id === "string" ? args.session_id : null;
+    const { data, error } = await supabase.rpc("rpc_send_reminder", {
+      p_audience: audience,
+      p_session_id: session_id,
+      p_message: message,
+    });
+    if (error) return { ok: false, note: error.message };
+    return {
+      ok: true,
+      data: { audience, sent_to: ((data as unknown[]) ?? []).length },
+    };
+  },
 };
 
 /** OpenAI/Groq-compatible tool schemas advertised to the model. */
@@ -168,6 +193,29 @@ export const toolSchemas = [
       name: "get_today_classes",
       description: "Get all classes/sessions scheduled for today (Asia/Seoul).",
       parameters: { type: "object", properties: {} },
+    },
+  },
+  {
+    type: "function",
+    function: {
+      name: "send_reminder",
+      description:
+        "Send a reminder notification NOW to students (owner/teacher only). Only call this AFTER the user has explicitly confirmed the audience and message. audience: 'tomorrow' = students committed to tomorrow's classes, 'all_students' = every student, 'session' = students committed to a specific session_id.",
+      parameters: {
+        type: "object",
+        properties: {
+          audience: {
+            type: "string",
+            enum: ["tomorrow", "all_students", "session"],
+          },
+          message: { type: "string", description: "The reminder text to send." },
+          session_id: {
+            type: "string",
+            description: "Required only when audience = 'session'.",
+          },
+        },
+        required: ["audience", "message"],
+      },
     },
   },
 ] as const;

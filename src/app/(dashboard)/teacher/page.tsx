@@ -6,6 +6,7 @@ import { StatsCard } from "@/components/dashboard/StatsCard";
 import { StartClassButton } from "@/components/classes/StartClassButton";
 import { LogSessionButton } from "@/components/classes/LogSessionButton";
 import { TeacherReferralCard } from "@/components/teacher/TeacherReferralCard";
+import { KakaoShareButton } from "@/components/kakao/KakaoShareButton";
 import { FlightMotif } from "@/components/brand/FlightMotif";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -195,7 +196,13 @@ export default async function TeacherHomePage() {
                     {formatDateTime(s.scheduled_at)}
                   </p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <KakaoShareButton
+                    text={`[WELC Academy] ${s.classes?.name ?? ""} — ${formatDateTime(s.scheduled_at)}`}
+                    url={appUrl}
+                    label={dict.kakao.share}
+                    copiedLabel={dict.kakao.copied}
+                  />
                   {s.status === "scheduled" && (
                     <StartClassButton sessionId={s.id} dict={dict} />
                   )}
