@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
-import { WelcIllustration } from "@/components/brand/WelcIllustration";
 import { FlightMotif } from "@/components/brand/FlightMotif";
+import { LottiePlayer } from "@/components/brand/LottiePlayer";
 
 /**
  * WELC speech-bubble mark — yellow bubble with italic "we(c" inside.
@@ -75,7 +75,9 @@ export function WelcBrandPanel() {
       </div>
 
       <div className="relative z-10 space-y-6">
-        <WelcIllustration className="mx-auto max-w-[280px]" />
+        <div className="mx-auto w-full max-w-[300px] overflow-hidden rounded-2xl bg-gradient-to-b from-[#16306e] to-[#0f1e4a] ring-1 ring-white/10">
+          <LottiePlayer src="/lottie/plane.json" className="h-[170px] w-full" />
+        </div>
 
         <blockquote className="border-l-4 border-[#F7C905] pl-4">
           <p className="text-xl font-semibold leading-snug">
