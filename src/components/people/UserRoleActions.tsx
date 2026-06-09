@@ -55,31 +55,46 @@ export function UserRoleActions({
   // Owners are not demotable from this UI (avoid locking out the account).
   if (role === "owner") return null;
 
-  if (role === "teacher") {
-    return (
-      <Button
-        size="sm"
-        variant="outline"
-        disabled={isPending}
-        onClick={() =>
-          run(() => setUserRole(userId, "student"), dict.manage.roleChanged)
-        }
-      >
-        {dict.manage.makeStudent}
-      </Button>
-    );
+  function promoteToOwner() {
+    if (typeof window !== "undefined" && !window.confirm(dict.manage.confirmOwner))
+      return;
+    run(() => setUserRole(userId, "owner"), dict.manage.roleChanged);
   }
 
   return (
-    <Button
-      size="sm"
-      variant="outline"
-      disabled={isPending}
-      onClick={() =>
-        run(() => setUserRole(userId, "teacher"), dict.manage.roleChanged)
-      }
-    >
-      {dict.manage.makeTeacher}
-    </Button>
+    <div className="flex flex-wrap gap-2">
+      {role === "teacher" ? (
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={isPending}
+          onClick={() =>
+            run(() => setUserRole(userId, "student"), dict.manage.roleChanged)
+          }
+        >
+          {dict.manage.makeStudent}
+        </Button>
+      ) : (
+        <Button
+          size="sm"
+          variant="outline"
+          disabled={isPending}
+          onClick={() =>
+            run(() => setUserRole(userId, "teacher"), dict.manage.roleChanged)
+          }
+        >
+          {dict.manage.makeTeacher}
+        </Button>
+      )}
+      <Button
+        size="sm"
+        variant="ghost"
+        className="text-[#0f1e4a]"
+        disabled={isPending}
+        onClick={promoteToOwner}
+      >
+        {dict.manage.makeOwner}
+      </Button>
+    </div>
   );
 }

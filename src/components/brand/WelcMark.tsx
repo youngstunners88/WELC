@@ -1,5 +1,6 @@
 import { cn } from "@/lib/utils";
 import { WelcIllustration } from "@/components/brand/WelcIllustration";
+import { FlightMotif } from "@/components/brand/FlightMotif";
 
 /**
  * WELC speech-bubble mark — yellow bubble with italic "we(c" inside.
@@ -61,13 +62,16 @@ export function WelcBrandPanel() {
         className="pointer-events-none absolute -bottom-24 -left-16 h-96 w-96 rounded-full opacity-[0.05]"
         style={{ background: "#F7C905" }}
       />
+      <FlightMotif />
 
       <div className="relative z-10">
         <WelcMark className="h-14" />
         <p className="mt-2 text-lg font-bold tracking-tight text-white/90">
           WELC Academy
         </p>
-        <p className="text-sm text-white/50">위준성 영어 라이프 컨설팅</p>
+        <p className="text-sm text-white/50">
+          위준성 영어 라이프 컨설팅 · Cabin Crew English
+        </p>
       </div>
 
       <div className="relative z-10 space-y-6">

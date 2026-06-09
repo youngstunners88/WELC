@@ -6,6 +6,7 @@ import { StatsCard } from "@/components/dashboard/StatsCard";
 import { StartClassButton } from "@/components/classes/StartClassButton";
 import { LogSessionButton } from "@/components/classes/LogSessionButton";
 import { TeacherReferralCard } from "@/components/teacher/TeacherReferralCard";
+import { FlightMotif } from "@/components/brand/FlightMotif";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -96,11 +97,8 @@ export default async function TeacherHomePage() {
     <div className="space-y-8">
       {/* Welcome hero */}
       <div className="relative overflow-hidden rounded-2xl bg-[#0f1e4a] px-8 py-7 text-white shadow-md">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full opacity-[0.08]"
-          style={{ background: "#F7C905" }}
-        />
+        <FlightMotif />
+        <div className="relative z-10">
         <p className="text-sm font-medium text-white/50">{today}</p>
         <h1 className="mt-1 text-2xl font-bold">
           안녕하세요, {firstName} 선생님!
@@ -119,6 +117,7 @@ export default async function TeacherHomePage() {
             {dict.materials.teacherTitle}
           </Link>
         </Button>
+        </div>
       </div>
 
       {/* Stats */}

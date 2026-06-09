@@ -1,8 +1,19 @@
-import { BookOpen, Clock, TrendingUp, AlertTriangle } from "lucide-react";
+import Link from "next/link";
+import {
+  PlaneTakeoff,
+  Clock,
+  TrendingUp,
+  AlertTriangle,
+  Users,
+  ClipboardList,
+  BookOpen,
+  ChevronRight,
+} from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getDictionary } from "@/lib/i18n";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { AttendanceTrend } from "@/components/dashboard/AttendanceTrend";
+import { FlightMotif } from "@/components/brand/FlightMotif";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type {
@@ -45,25 +56,20 @@ export default async function OwnerDashboardPage() {
 
   return (
     <div className="space-y-8">
-      {/* Welcome hero */}
-      <div className="relative overflow-hidden rounded-2xl bg-[#0f1e4a] px-8 py-7 text-white shadow-md">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -right-8 -top-8 h-40 w-40 rounded-full opacity-[0.08]"
-          style={{ background: "#F7C905" }}
-        />
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -bottom-10 right-20 h-28 w-28 rounded-full opacity-[0.06]"
-          style={{ background: "#F7C905" }}
-        />
-        <p className="text-sm font-medium text-white/50">{today}</p>
-        <h1 className="mt-1 text-2xl font-bold">
-          {dict.nav.dashboard}
-        </h1>
-        <p className="mt-1 text-sm text-white/60">
-          WELC Academy — 위준성 영어 라이프 컨설팅
-        </p>
+      {/* Command center hero */}
+      <div className="relative overflow-hidden rounded-2xl bg-[#0f1e4a] px-8 py-8 text-white shadow-md">
+        <FlightMotif />
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-widest text-[#F7C905]">
+            <PlaneTakeoff className="h-4 w-4" />
+            {dict.owner.commandCenter}
+          </div>
+          <p className="mt-3 text-sm font-medium text-white/50">{today}</p>
+          <h1 className="mt-1 text-2xl font-bold">{dict.owner.welcome}</h1>
+          <p className="mt-1 text-sm text-white/60">
+            WELC Academy — 위준성 영어 라이프 컨설팅
+          </p>
+        </div>
       </div>
 
       {/* Stats */}
@@ -71,7 +77,7 @@ export default async function OwnerDashboardPage() {
         <StatsCard
           title={dict.owner.activeClasses}
           value={s.active_classes}
-          icon={BookOpen}
+          icon={PlaneTakeoff}
           color="navy"
         />
         <StatsCard
@@ -92,6 +98,39 @@ export default async function OwnerDashboardPage() {
           icon={AlertTriangle}
           color="red"
         />
+      </div>
+
+      {/* Quick actions — control center */}
+      <div>
+        <p className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
+          {dict.owner.quickActions}
+        </p>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+          {[
+            { href: "/owner/people", label: dict.nav.people, icon: Users },
+            { href: "/owner/classes", label: dict.nav.classes, icon: BookOpen },
+            {
+              href: "/owner/attendance",
+              label: dict.nav.attendance,
+              icon: ClipboardList,
+            },
+          ].map((a) => {
+            const Icon = a.icon;
+            return (
+              <Link
+                key={a.href}
+                href={a.href}
+                className="welc-card-glow welc-card-hover group flex items-center gap-3 rounded-xl border bg-card p-4"
+              >
+                <div className="rounded-lg bg-[#0f1e4a] p-2.5 text-[#F7C905]">
+                  <Icon className="h-5 w-5" />
+                </div>
+                <span className="flex-1 font-medium">{a.label}</span>
+                <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+              </Link>
+            );
+          })}
+        </div>
       </div>
 
       {/* Charts */}

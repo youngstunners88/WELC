@@ -60,10 +60,12 @@ alter table profiles
 -- A teacher may read the profiles of students attributed to them, even before
 -- those students commit to any session (the existing "teacher reads own
 -- students" policy only covers students who already have a commitment).
+-- (Owners already read every profile via "profiles: owner read all", so this
+-- policy only needs to cover the teacher case.)
 drop policy if exists "profiles: teacher reads referred students" on profiles;
 create policy "profiles: teacher reads referred students"
   on profiles for select
-  using (auth_user_role() in ('teacher','owner') and referred_by = auth.uid());
+  using (auth_user_role() = 'teacher' and referred_by = auth.uid());
 
 -- Re-create the signup trigger to also capture a referring teacher id passed in
 -- user metadata as `referred_by`. The id is only honoured if it belongs to an
@@ -122,3 +124,8 @@ from profiles s
 left join v_student_attendance va on va.student_id = s.id
 where s.referred_by is not null
   and s.role = 'student';
+
+-- security_invoker = on means the *querying* user's RLS on profiles applies:
+-- students can only read their own profile row, so this view never exposes one
+-- student's roster to another. Grant mirrors the other analytics views.
+grant select on v_teacher_students to authenticated;

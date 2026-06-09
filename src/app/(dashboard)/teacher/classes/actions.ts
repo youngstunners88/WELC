@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireRoleAction } from "@/lib/auth/guard";
+import type { Role } from "@/lib/constants";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
@@ -11,7 +12,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  */
 async function canManageClass(
   supabase: SupabaseClient,
-  role: string,
+  role: Role,
   userId: string,
   classId: string
 ): Promise<string | null> {

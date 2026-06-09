@@ -1,14 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/lib/supabase/server";
 import { requireRoleAction } from "@/lib/auth/guard";
 import { ATTENDANCE_MARKS } from "@/lib/constants";
 import type { AttendanceMark } from "@/types/database";
 
 export async function startSession(sessionId: string) {
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("rpc_start_session", {
+  const auth = await requireRoleAction(["owner", "teacher"]);
+  if (!auth.ok) return { error: auth.error };
+  const { error } = await auth.supabase.rpc("rpc_start_session", {
     p_session_id: sessionId,
   });
   if (error) return { error: error.message };
@@ -18,8 +18,9 @@ export async function startSession(sessionId: string) {
 }
 
 export async function endSession(sessionId: string) {
-  const supabase = await createClient();
-  const { error } = await supabase.rpc("rpc_end_session", {
+  const auth = await requireRoleAction(["owner", "teacher"]);
+  if (!auth.ok) return { error: auth.error };
+  const { error } = await auth.supabase.rpc("rpc_end_session", {
     p_session_id: sessionId,
   });
   if (error) return { error: error.message };

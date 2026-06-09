@@ -8,6 +8,12 @@ export async function updateProfile(fullName: string, phone: string) {
   if (!name) return { error: "Name is required" };
   if (name.length > 80) return { error: "Name is too long" };
 
+  const trimmedPhone = phone.trim();
+  // Permissive but sane: digits, spaces, and + ( ) - only, up to 20 chars.
+  if (trimmedPhone && !/^[0-9+()\-\s]{4,20}$/.test(trimmedPhone)) {
+    return { error: "Please enter a valid phone number" };
+  }
+
   const auth = await requireRoleAction();
   if (!auth.ok) return { error: auth.error };
 
@@ -15,7 +21,7 @@ export async function updateProfile(fullName: string, phone: string) {
   // so this can never touch role or status.
   const { error } = await auth.supabase
     .from("profiles")
-    .update({ full_name: name, phone: phone.trim() || null })
+    .update({ full_name: name, phone: trimmedPhone || null })
     .eq("id", auth.userId);
   if (error) return { error: error.message };
 
