@@ -107,6 +107,41 @@ begin
 end;
 $$;
 
+-- ── rpc_owner_dm — owner starts (or continues) a 1:1 DM with any member ──────
+create or replace function rpc_owner_dm(p_member_id uuid, p_ciphertext text)
+returns uuid language plpgsql security definer set search_path = public as $$
+declare
+  v_thread uuid;
+begin
+  if auth_user_role() <> 'owner' then
+    raise exception 'Only the academy owner can send here';
+  end if;
+  if coalesce(btrim(p_ciphertext), '') = '' then
+    raise exception 'Message is required';
+  end if;
+  if not exists (
+    select 1 from profiles where id = p_member_id and role in ('teacher','student')
+  ) then
+    raise exception 'Recipient not found';
+  end if;
+
+  insert into message_threads (member_id, last_message_at, member_unread)
+  values (p_member_id, now(), 1)
+  on conflict (member_id) do update
+    set last_message_at = now(),
+        member_unread   = message_threads.member_unread + 1
+  returning id into v_thread;
+
+  insert into messages (thread_id, sender_id, sender_role, ciphertext)
+  values (v_thread, auth.uid(), 'owner', p_ciphertext);
+
+  insert into notifications (user_id, type, message)
+  values (p_member_id, 'message', '학원에서 새 메시지가 도착했습니다 · New message from the academy');
+
+  return v_thread;
+end;
+$$;
+
 -- ── rpc_owner_reply — owner replies inside one member's thread ───────────────
 create or replace function rpc_owner_reply(p_thread_id uuid, p_ciphertext text)
 returns void language plpgsql security definer set search_path = public as $$
@@ -181,10 +216,12 @@ end;
 $$;
 
 revoke execute on function rpc_owner_broadcast(text, text)   from public, anon;
+revoke execute on function rpc_owner_dm(uuid, text)           from public, anon;
 revoke execute on function rpc_owner_reply(uuid, text)        from public, anon;
 revoke execute on function rpc_member_reply(text)             from public, anon;
 revoke execute on function rpc_mark_thread_read(uuid)         from public, anon;
 grant  execute on function rpc_owner_broadcast(text, text)   to authenticated;
+grant  execute on function rpc_owner_dm(uuid, text)           to authenticated;
 grant  execute on function rpc_owner_reply(uuid, text)        to authenticated;
 grant  execute on function rpc_member_reply(text)             to authenticated;
 grant  execute on function rpc_mark_thread_read(uuid)         to authenticated;

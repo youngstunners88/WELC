@@ -5,6 +5,7 @@ import { getDictionary } from "@/lib/i18n";
 import { FlightMotif } from "@/components/brand/FlightMotif";
 import { Badge } from "@/components/ui/badge";
 import { BroadcastComposer } from "@/components/messages/BroadcastComposer";
+import { NewDmComposer } from "@/components/messages/NewDmComposer";
 import { decryptMessage, isMessagingConfigured } from "@/lib/crypto/messages";
 import { formatDateTime } from "@/lib/datetime";
 import type { MessageThread, MessageRow, OwnerThreadRow } from "@/types/database";
@@ -16,6 +17,25 @@ export default async function OwnerMessagesPage() {
   const supabase = await createClient();
 
   let rows: OwnerThreadRow[] = [];
+  let members: { id: string; name: string; role: "teacher" | "student" }[] = [];
+
+  if (configured) {
+    const { data: allMembers } = await supabase
+      .from("profiles")
+      .select("id, full_name, role")
+      .in("role", ["teacher", "student"])
+      .order("full_name");
+    members = (
+      (allMembers as { id: string; full_name: string; role: string }[] | null) ??
+      []
+    ).map((p) => ({
+      id: p.id,
+      name: p.full_name,
+      role: (p.role === "teacher" ? "teacher" : "student") as
+        | "teacher"
+        | "student",
+    }));
+  }
 
   if (configured) {
     const { data: threadsData } = await supabase
@@ -97,6 +117,8 @@ export default async function OwnerMessagesPage() {
       ) : (
         <>
           <BroadcastComposer dict={dict} />
+
+          <NewDmComposer members={members} dict={dict} />
 
           <div>
             <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">
