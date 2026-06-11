@@ -30,6 +30,8 @@ export async function middleware(request: NextRequest) {
     "/student",
     "/settings",
     "/calendar",
+    "/messages",
+    "/mfa",
   ].some((p) => request.nextUrl.pathname.startsWith(p));
 
   if (isProtected && !user) {
@@ -46,5 +48,7 @@ export const config = {
     "/student/:path*",
     "/settings/:path*",
     "/calendar/:path*",
+    "/messages/:path*",
+    "/mfa/:path*",
   ],
 };

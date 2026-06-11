@@ -157,3 +157,42 @@ export interface SessionAttendanceRow {
   late: number;
   missed: number;
 }
+
+/** message_threads (one per member, owned by the academy) */
+export interface MessageThread {
+  id: string;
+  member_id: string;
+  last_message_at: string;
+  member_unread: number;
+  owner_unread: number;
+  created_at: string;
+}
+
+/** messages — ciphertext at rest; decrypted server-side before display */
+export interface MessageRow {
+  id: string;
+  thread_id: string;
+  sender_id: string;
+  sender_role: "owner" | "member";
+  ciphertext: string;
+  created_at: string;
+}
+
+/** A message with its body already decrypted, safe to send to the client. */
+export interface DecryptedMessage {
+  id: string;
+  sender_role: "owner" | "member";
+  body: string;
+  created_at: string;
+}
+
+/** An owner-side thread row joined with the member's identity. */
+export interface OwnerThreadRow {
+  id: string;
+  member_id: string;
+  member_name: string;
+  member_role: "teacher" | "student";
+  last_message_at: string;
+  owner_unread: number;
+  preview: string;
+}

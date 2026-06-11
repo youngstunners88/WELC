@@ -63,5 +63,15 @@ export async function requireRoleAction(allowed?: Role[]): Promise<
   if (allowed && !allowed.includes(profile.role)) {
     return { ok: false, error: "Not authorized" };
   }
+
+  // Step-up enforcement: if the caller has a second factor enrolled but this
+  // session is still AAL1, refuse privileged actions. Mirrors the owner layout
+  // so a stolen pre-2FA session can't drive server actions either.
+  const { data: aal } =
+    await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  if (aal && aal.nextLevel === "aal2" && aal.currentLevel !== "aal2") {
+    return { ok: false, error: "Two-factor verification required" };
+  }
+
   return { ok: true, userId: user.id, role: profile.role, supabase };
 }

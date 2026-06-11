@@ -16,6 +16,7 @@ import {
   CalendarDays,
   FileText,
   BookMarked,
+  MessagesSquare,
   Settings,
   LogOut,
   Menu,
@@ -45,6 +46,7 @@ function itemsForRole(role: Role, dict: Dictionary): NavItem[] {
       { href: "/owner/attendance", label: dict.nav.attendance, icon: ClipboardList },
       { href: "/calendar", label: dict.nav.calendar, icon: CalendarDays },
       { href: "/owner/reminders", label: dict.nav.reminders, icon: Bell },
+      { href: "/owner/messages", label: dict.nav.messages, icon: MessagesSquare },
       { href: "/owner/reports", label: dict.nav.reports, icon: FileText },
       { href: "/owner/revenue", label: dict.nav.revenue, icon: Wallet },
       {
@@ -60,12 +62,14 @@ function itemsForRole(role: Role, dict: Dictionary): NavItem[] {
     return [
       { href: "/teacher", label: dict.nav.dashboard, icon: LayoutDashboard },
       { href: "/calendar", label: dict.nav.calendar, icon: CalendarDays },
+      { href: "/messages", label: dict.nav.messages, icon: MessagesSquare },
       { href: "/teacher/classes", label: dict.nav.materials, icon: FolderOpen },
     ];
   }
   return [
     { href: "/student/classes", label: dict.nav.classes, icon: BookOpen },
     { href: "/calendar", label: dict.nav.calendar, icon: CalendarDays },
+    { href: "/messages", label: dict.nav.messages, icon: MessagesSquare },
     { href: "/student/history", label: dict.nav.history, icon: History },
   ];
 }
@@ -158,10 +162,10 @@ export function DashboardNav({
                 href={item.href}
                 onClick={() => setOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
+                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
                   active
-                    ? "bg-[#F7C905] text-[#0f1e4a]"
-                    : "text-white/70 hover:bg-white/10 hover:text-white"
+                    ? "welc-glint bg-[#F7C905] text-[#0f1e4a] shadow-[0_2px_12px_-2px_rgba(247,201,5,0.45)]"
+                    : "text-white/70 hover:translate-x-0.5 hover:bg-white/10 hover:text-white"
                 )}
               >
                 <Icon className="h-4 w-4 shrink-0" />

@@ -57,11 +57,11 @@ export default async function OwnerDashboardPage() {
   return (
     <div className="space-y-8">
       {/* Command center hero */}
-      <div className="relative overflow-hidden rounded-2xl bg-[#0f1e4a] px-8 py-8 text-white shadow-md">
+      <div className="welc-sky welc-glint welc-rise relative overflow-hidden rounded-2xl px-8 py-8 text-white shadow-md">
         <FlightMotif />
         <div className="relative z-10">
           <div className="flex items-center gap-2 text-xs font-medium uppercase tracking-widest text-[#F7C905]">
-            <PlaneTakeoff className="h-4 w-4" />
+            <PlaneTakeoff className="welc-float h-4 w-4" />
             {dict.owner.commandCenter}
           </div>
           <p className="mt-3 text-sm font-medium text-white/50">{today}</p>
@@ -69,6 +69,7 @@ export default async function OwnerDashboardPage() {
           <p className="mt-1 text-sm text-white/60">
             WELC Academy — 위준성 영어 라이프 컨설팅
           </p>
+          <div className="welc-runway mt-5 w-48 rounded-full opacity-80" />
         </div>
       </div>
 
@@ -79,24 +80,28 @@ export default async function OwnerDashboardPage() {
           value={s.active_classes}
           icon={PlaneTakeoff}
           color="navy"
+          stagger={1}
         />
         <StatsCard
           title={dict.owner.teacherHours}
           value={s.total_hours}
           icon={Clock}
           color="yellow"
+          stagger={2}
         />
         <StatsCard
           title={dict.owner.attendanceRate}
           value={`${s.attendance_rate}%`}
           icon={TrendingUp}
           color="green"
+          stagger={3}
         />
         <StatsCard
           title={dict.owner.atRisk}
           value={s.at_risk_count}
           icon={AlertTriangle}
           color="red"
+          stagger={4}
         />
       </div>
 

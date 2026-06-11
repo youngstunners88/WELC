@@ -42,7 +42,7 @@ export default async function OwnerNotebookPage() {
   return (
     <div className="space-y-8">
       {/* Hero */}
-      <div className="relative overflow-hidden rounded-2xl bg-[#0f1e4a] px-8 py-8 text-white shadow-md">
+      <div className="welc-sky welc-glint welc-rise relative overflow-hidden rounded-2xl px-8 py-8 text-white shadow-md">
         <FlightMotif />
         <div className="relative z-10 max-w-2xl">
           <div className="flex items-center gap-2">

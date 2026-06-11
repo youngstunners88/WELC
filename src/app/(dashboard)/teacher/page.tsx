@@ -97,7 +97,7 @@ export default async function TeacherHomePage() {
   return (
     <div className="space-y-8">
       {/* Welcome hero */}
-      <div className="relative overflow-hidden rounded-2xl bg-[#0f1e4a] px-8 py-7 text-white shadow-md">
+      <div className="welc-sky welc-glint welc-rise relative overflow-hidden rounded-2xl px-8 py-7 text-white shadow-md">
         <FlightMotif />
         <div className="relative z-10">
         <p className="text-sm font-medium text-white/50">{today}</p>
@@ -128,12 +128,14 @@ export default async function TeacherHomePage() {
           value={monthHours.toFixed(1)}
           icon={Clock}
           color="yellow"
+          stagger={1}
         />
         <StatsCard
           title={dict.referral.myStudents}
           value={students.length}
           icon={Users}
           color="navy"
+          stagger={2}
         />
       </div>
 

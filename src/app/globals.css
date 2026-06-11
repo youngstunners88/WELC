@@ -66,9 +66,118 @@
     box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06);
   }
   .welc-card-hover {
-    @apply transition-shadow duration-200;
+    transition: box-shadow 0.25s cubic-bezier(0.2, 0, 0, 1),
+      transform 0.25s cubic-bezier(0.2, 0, 0, 1);
   }
   .welc-card-hover:hover {
-    box-shadow: 0 4px 12px 0 rgb(0 0 0 / 0.10), 0 2px 4px -1px rgb(0 0 0 / 0.06);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px -4px rgb(15 30 74 / 0.14), 0 2px 6px -2px rgb(15 30 74 / 0.08);
+  }
+
+  /* Entrance choreography — set --stagger (0,1,2,…) per element. */
+  .welc-rise {
+    animation: welc-rise 0.55s cubic-bezier(0.2, 0, 0, 1) both;
+    animation-delay: calc(var(--stagger, 0) * 70ms);
+  }
+
+  /* Gold glint sweep across a surface. */
+  .welc-glint {
+    position: relative;
+    overflow: hidden;
+  }
+  .welc-glint::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      105deg,
+      transparent 38%,
+      rgb(255 255 255 / 0.18) 50%,
+      transparent 62%
+    );
+    transform: translateX(-100%);
+    animation: welc-glint 4.5s cubic-bezier(0.4, 0, 0.2, 1) 1.2s infinite;
+    pointer-events: none;
+  }
+
+  /* Gentle float for decorative icons. */
+  .welc-float {
+    animation: welc-float 5s ease-in-out infinite;
+  }
+
+  /* Runway lights — marching dashed gold line. */
+  .welc-runway {
+    height: 2px;
+    background-image: linear-gradient(90deg, #f7c905 0 14px, transparent 14px 26px);
+    background-size: 26px 2px;
+    animation: welc-runway 1.6s linear infinite;
+  }
+
+  /* Slow-drifting night-sky gradient for hero panels. */
+  .welc-sky {
+    background: linear-gradient(135deg, #0f1e4a 0%, #16295e 45%, #0b1638 100%);
+    background-size: 200% 200%;
+    animation: welc-sky 14s ease-in-out infinite;
+  }
+}
+
+@keyframes welc-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes welc-glint {
+  0% {
+    transform: translateX(-100%);
+  }
+  45%,
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes welc-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes welc-runway {
+  to {
+    background-position-x: 26px;
+  }
+}
+
+@keyframes welc-sky {
+  0%,
+  100% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welc-rise,
+  .welc-float,
+  .welc-runway,
+  .welc-sky,
+  .welc-glint::after {
+    animation: none !important;
+  }
+  .welc-rise {
+    opacity: 1;
+    transform: none;
   }
 }

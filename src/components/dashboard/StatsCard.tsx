@@ -1,5 +1,6 @@
 import type { LucideIcon } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { CountUp } from "@/components/dashboard/CountUp";
 import { cn } from "@/lib/utils";
 
 type ColorVariant = "navy" | "yellow" | "green" | "red" | "purple";
@@ -41,6 +42,8 @@ interface StatsCardProps {
   icon: LucideIcon;
   description?: string;
   color?: ColorVariant;
+  /** Entrance order for staggered reveal (0, 1, 2, …). */
+  stagger?: number;
 }
 
 export function StatsCard({
@@ -49,10 +52,17 @@ export function StatsCard({
   icon: Icon,
   description,
   color = "navy",
+  stagger = 0,
 }: StatsCardProps) {
   const styles = variantStyles[color];
   return (
-    <Card className={cn("welc-card-glow welc-card-hover overflow-hidden", styles.border)}>
+    <Card
+      className={cn(
+        "welc-card-glow welc-card-hover welc-rise overflow-hidden",
+        styles.border
+      )}
+      style={{ "--stagger": stagger } as React.CSSProperties}
+    >
       <CardContent className="flex items-center gap-4 p-5">
         <div className={cn("rounded-xl p-3 shadow-sm", styles.icon)}>
           <Icon className="h-6 w-6" />
@@ -62,7 +72,7 @@ export function StatsCard({
             {title}
           </p>
           <p className={cn("text-3xl font-bold tabular-nums", styles.value)}>
-            {value}
+            <CountUp value={value} />
           </p>
           {description && (
             <p className="text-xs text-muted-foreground">{description}</p>

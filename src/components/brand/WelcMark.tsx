@@ -50,7 +50,7 @@ export function WelcWordmark({ className }: { className?: string }) {
 /** Full-width hero panel for the auth split-screen layout (left side). */
 export function WelcBrandPanel() {
   return (
-    <div className="relative flex flex-col justify-between overflow-hidden bg-[#0f1e4a] p-10 text-white">
+    <div className="welc-sky relative flex flex-col justify-between overflow-hidden p-10 text-white">
       {/* Decorative speech-bubble shapes */}
       <div
         aria-hidden

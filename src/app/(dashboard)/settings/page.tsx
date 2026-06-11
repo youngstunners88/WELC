@@ -1,8 +1,10 @@
+import { ShieldCheck } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getDictionary } from "@/lib/i18n";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProfileForm } from "@/components/settings/ProfileForm";
 import { KakaoPrefs } from "@/components/settings/KakaoPrefs";
+import { TwoFactorCard } from "@/components/settings/TwoFactorCard";
 import type { Profile } from "@/types/database";
 
 export default async function SettingsPage() {
@@ -52,6 +54,20 @@ export default async function SettingsPage() {
           />
         </CardContent>
       </Card>
+
+      {profile?.role === "owner" && (
+        <Card className="welc-card-glow border-t-4 border-t-[#0f1e4a]">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-base">
+              <ShieldCheck className="h-4 w-4 text-[#0f1e4a]" />
+              {dict.security.title}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TwoFactorCard dict={dict} />
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
