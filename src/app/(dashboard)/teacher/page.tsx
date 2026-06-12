@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Clock, FolderOpen, Users } from "lucide-react";
+import { Clock, FolderOpen, Users, LineChart } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getDictionary } from "@/lib/i18n";
 import { StatsCard } from "@/components/dashboard/StatsCard";
@@ -17,6 +17,7 @@ import type {
   Class,
   TeacherHoursRow,
   TeacherStudentRow,
+  TeacherDigestRow,
 } from "@/types/database";
 
 interface SessionRow extends ClassSession {
@@ -81,6 +82,16 @@ export default async function TeacherHomePage() {
     .order("joined_at", { ascending: false });
   const students = (myStudents as TeacherStudentRow[] | null) ?? [];
 
+  // This month's digest (self). RPC returns just this teacher's row; degrades
+  // to null until the 20260610 migration is applied.
+  const { data: digestData } = await supabase.rpc("rpc_teacher_digests", {
+    p_month: new Date().toISOString().slice(0, 10),
+  });
+  const myDigest =
+    ((digestData as TeacherDigestRow[] | null) ?? []).find(
+      (r) => r.teacher_id === uid
+    ) ?? null;
+
   const appUrl =
     process.env.NEXT_PUBLIC_APP_URL ?? "https://welc-academy.vercel.app";
   const referralLink = `${appUrl}/login?ref=${uid}`;
@@ -138,6 +149,46 @@ export default async function TeacherHomePage() {
           stagger={2}
         />
       </div>
+
+      {/* This month's digest (self) */}
+      {myDigest && (
+        <Card className="welc-card-glow welc-rise">
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-base">
+              <LineChart className="h-4 w-4 text-[#0f1e4a]" />
+              {dict.digests.title}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div className="rounded-xl bg-muted/50 p-3">
+                <p className="text-lg font-bold tabular-nums text-[#0f1e4a]">
+                  {Number(myDigest.hours).toFixed(1)}
+                </p>
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  {dict.digests.hours}
+                </p>
+              </div>
+              <div className="rounded-xl bg-muted/50 p-3">
+                <p className="text-lg font-bold tabular-nums text-[#0f1e4a]">
+                  {myDigest.attendance_rate ?? 0}%
+                </p>
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  {dict.digests.attendance}
+                </p>
+              </div>
+              <div className="rounded-xl bg-muted/50 p-3">
+                <p className="text-lg font-bold tabular-nums text-[#0f1e4a]">
+                  {myDigest.at_risk}
+                </p>
+                <p className="text-[10px] uppercase tracking-wide text-muted-foreground">
+                  {dict.digests.atRisk}
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Referral link */}
       <TeacherReferralCard link={referralLink} dict={dict} />
