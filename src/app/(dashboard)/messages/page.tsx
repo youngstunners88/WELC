@@ -38,11 +38,31 @@ export default async function MemberMessagesPage() {
         .select("*")
         .eq("thread_id", thread.id)
         .order("created_at", { ascending: true });
-      messages = ((msgs as MessageRow[] | null) ?? []).map((msg) => ({
+      const rows = (msgs as MessageRow[] | null) ?? [];
+
+      // Which ack-required messages has this member already acknowledged?
+      const ackIds = rows.filter((r) => r.requires_ack).map((r) => r.id);
+      let ackedSet = new Set<string>();
+      if (ackIds.length > 0) {
+        const { data: acks } = await supabase
+          .from("message_acks")
+          .select("message_id")
+          .eq("user_id", user.id)
+          .in("message_id", ackIds);
+        ackedSet = new Set(
+          ((acks as { message_id: string }[] | null) ?? []).map(
+            (a) => a.message_id
+          )
+        );
+      }
+
+      messages = rows.map((msg) => ({
         id: msg.id,
         sender_role: msg.sender_role,
         body: decryptMessage(msg.ciphertext),
         created_at: msg.created_at,
+        requires_ack: msg.requires_ack,
+        acked: ackedSet.has(msg.id),
       }));
       await supabase.rpc("rpc_mark_thread_read", { p_thread_id: thread.id });
     }
@@ -78,6 +98,7 @@ export default async function MemberMessagesPage() {
               viewer="member"
               academyLabel={m.academy}
               emptyLabel={m.memberEmpty}
+              dict={dict}
             />
           </div>
           <div className="rounded-b-2xl border border-t-0">

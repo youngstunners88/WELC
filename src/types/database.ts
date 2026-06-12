@@ -165,6 +165,7 @@ export interface MessageThread {
   last_message_at: string;
   member_unread: number;
   owner_unread: number;
+  member_last_read_at: string | null;
   created_at: string;
 }
 
@@ -176,6 +177,8 @@ export interface MessageRow {
   sender_role: "owner" | "member";
   ciphertext: string;
   created_at: string;
+  requires_ack: boolean;
+  broadcast_id: string | null;
 }
 
 /** A message with its body already decrypted, safe to send to the client. */
@@ -183,6 +186,48 @@ export interface DecryptedMessage {
   id: string;
   sender_role: "owner" | "member";
   body: string;
+  created_at: string;
+  requires_ack?: boolean;
+  acked?: boolean;
+}
+
+/** A row from rpc_teacher_digests. */
+export interface TeacherDigestRow {
+  teacher_id: string;
+  teacher_name: string;
+  sessions: number;
+  hours: number;
+  attendance_rate: number | null;
+  students: number;
+  at_risk: number;
+}
+
+/** A broadcast/announcement with seen + ack rollups for the owner console. */
+export interface BroadcastRow {
+  id: string;
+  audience: "all" | "teachers" | "students";
+  requires_ack: boolean;
+  send_at: string | null;
+  recurrence: "none" | "weekly" | "monthly";
+  status: "pending" | "sent" | "cancelled";
+  sent_count: number | null;
+  created_at: string;
+  sent_at: string | null;
+  preview: string;
+  total: number;
+  seen: number;
+  acked: number;
+}
+
+/** A row in the owner audit log, joined with the actor's name. */
+export interface AuditRow {
+  id: string;
+  actor_name: string | null;
+  actor_role: string | null;
+  action: string;
+  target_type: string | null;
+  target_id: string | null;
+  detail: Record<string, unknown> | null;
   created_at: string;
 }
 

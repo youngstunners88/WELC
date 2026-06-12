@@ -2,6 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { logAudit } from "@/lib/audit";
 
 export async function signIn(email: string, password: string) {
   const supabase = await createClient();
@@ -17,6 +18,11 @@ export async function signIn(email: string, password: string) {
     .select("role")
     .eq("id", user?.id ?? "")
     .single();
+
+  // Record the sign-in for the owner's audit trail (best-effort).
+  await logAudit(supabase, "auth.login", "user", user?.id ?? null, {
+    role: profile?.role ?? null,
+  });
 
   if (profile?.role === "owner") redirect("/owner");
   if (profile?.role === "teacher") redirect("/teacher");

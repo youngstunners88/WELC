@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { MessagesSquare, ChevronRight, ShieldAlert, Lock } from "lucide-react";
+import { MessagesSquare, ChevronRight, ShieldAlert, Lock, Megaphone } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getDictionary } from "@/lib/i18n";
 import { FlightMotif } from "@/components/brand/FlightMotif";
@@ -103,6 +103,13 @@ export default async function OwnerMessagesPage() {
             {m.ownerTitle}
           </h1>
           <p className="mt-1 text-sm text-white/60">{m.ownerSubtitle}</p>
+          <Link
+            href="/owner/announcements"
+            className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3 py-1.5 text-xs font-medium text-white hover:bg-white/20"
+          >
+            <Megaphone className="h-3.5 w-3.5" />
+            {m.viewAnnouncements}
+          </Link>
         </div>
       </div>
 

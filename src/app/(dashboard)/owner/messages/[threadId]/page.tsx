@@ -49,6 +49,7 @@ export default async function OwnerThreadPage({
       sender_role: msg.sender_role,
       body: decryptMessage(msg.ciphertext),
       created_at: msg.created_at,
+      requires_ack: msg.requires_ack,
     })
   );
 
@@ -90,6 +91,8 @@ export default async function OwnerThreadPage({
           viewer="owner"
           academyLabel={m.academy}
           emptyLabel={m.ownerThreadEmpty}
+          memberLastReadAt={threadData.member_last_read_at}
+          dict={dict}
         />
       </div>
 

@@ -7,6 +7,7 @@ import { encryptMessage, isMessagingConfigured } from "@/lib/crypto/messages";
 const MAX_LEN = 2000;
 
 type Audience = "all" | "teachers" | "students";
+type Recurrence = "none" | "weekly" | "monthly";
 
 function validateBody(body: string): { ok: true; text: string } | { ok: false; error: string } {
   const text = body.trim();
@@ -16,7 +17,11 @@ function validateBody(body: string): { ok: true; text: string } | { ok: false; e
 }
 
 /** Owner → audience broadcast. Fans out into each member's private thread. */
-export async function sendBroadcast(audience: Audience, body: string) {
+export async function sendBroadcast(
+  audience: Audience,
+  body: string,
+  requiresAck = false
+) {
   if (!isMessagingConfigured()) {
     return { error: "Secure messaging is not configured yet." };
   }
@@ -32,11 +37,77 @@ export async function sendBroadcast(audience: Audience, body: string) {
   const { data, error } = await auth.supabase.rpc("rpc_owner_broadcast", {
     p_audience: audience,
     p_ciphertext: encryptMessage(v.text),
+    p_requires_ack: requiresAck,
   });
   if (error) return { error: error.message };
 
   revalidatePath("/owner/messages");
+  revalidatePath("/owner/announcements");
   return { success: true, count: (data as number) ?? 0 };
+}
+
+/** Owner → schedule a broadcast for later (optionally recurring). */
+export async function scheduleBroadcast(
+  audience: Audience,
+  body: string,
+  requiresAck: boolean,
+  sendAtISO: string,
+  recurrence: Recurrence
+) {
+  if (!isMessagingConfigured()) {
+    return { error: "Secure messaging is not configured yet." };
+  }
+  if (!["all", "teachers", "students"].includes(audience)) {
+    return { error: "Unknown audience" };
+  }
+  if (!["none", "weekly", "monthly"].includes(recurrence)) {
+    return { error: "Invalid recurrence" };
+  }
+  const when = new Date(sendAtISO);
+  if (isNaN(when.getTime()) || when.getTime() <= Date.now()) {
+    return { error: "Pick a time in the future" };
+  }
+  const v = validateBody(body);
+  if (!v.ok) return { error: v.error };
+
+  const auth = await requireRoleAction(["owner"]);
+  if (!auth.ok) return { error: auth.error };
+
+  const { error } = await auth.supabase.rpc("rpc_schedule_broadcast", {
+    p_audience: audience,
+    p_ciphertext: encryptMessage(v.text),
+    p_requires_ack: requiresAck,
+    p_send_at: when.toISOString(),
+    p_recurrence: recurrence,
+  });
+  if (error) return { error: error.message };
+
+  revalidatePath("/owner/announcements");
+  return { success: true };
+}
+
+/** Owner cancels a pending (not-yet-sent) scheduled broadcast. */
+export async function cancelBroadcast(broadcastId: string) {
+  const auth = await requireRoleAction(["owner"]);
+  if (!auth.ok) return { error: auth.error };
+  const { error } = await auth.supabase.rpc("rpc_cancel_broadcast", {
+    p_id: broadcastId,
+  });
+  if (error) return { error: error.message };
+  revalidatePath("/owner/announcements");
+  return { success: true };
+}
+
+/** Member acknowledges an ack-required message. */
+export async function ackMessage(messageId: string) {
+  const auth = await requireRoleAction(["teacher", "student"]);
+  if (!auth.ok) return { error: auth.error };
+  const { error } = await auth.supabase.rpc("rpc_ack_message", {
+    p_message_id: messageId,
+  });
+  if (error) return { error: error.message };
+  revalidatePath("/messages");
+  return { success: true };
 }
 
 /** Owner starts (or continues) a direct 1:1 message with any member. */

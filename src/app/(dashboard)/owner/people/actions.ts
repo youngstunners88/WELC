@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { requireRoleAction } from "@/lib/auth/guard";
+import { logAudit } from "@/lib/audit";
 
 const VALID_ROLES = ["owner", "teacher", "student"] as const;
 
@@ -19,6 +20,9 @@ export async function setUserRole(
     new_role: newRole,
   });
   if (rpcError) return { error: rpcError.message };
+  await logAudit(auth.supabase, "user.role_change", "user", targetUserId, {
+    new_role: newRole,
+  });
   revalidatePath("/owner/people");
   return { success: true };
 }
@@ -31,6 +35,7 @@ export async function rejectTeacher(targetUserId: string) {
     target_user_id: targetUserId,
   });
   if (rpcError) return { error: rpcError.message };
+  await logAudit(auth.supabase, "user.teacher_rejected", "user", targetUserId, {});
   revalidatePath("/owner/people");
   return { success: true };
 }
