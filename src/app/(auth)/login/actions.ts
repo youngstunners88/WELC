@@ -1,10 +1,26 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { logAudit } from "@/lib/audit";
+import { rateLimit } from "@/lib/rate-limit";
+
+async function clientIp(): Promise<string> {
+  const h = await headers();
+  return h.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+}
 
 export async function signIn(email: string, password: string) {
+  // Brute-force guard: 5 attempts / 15 min, keyed by IP + the email being
+  // attempted, so one bad actor can't lock out other users at the same IP
+  // and a distributed attempt against one account still gets throttled.
+  const ip = await clientIp();
+  const { ok } = rateLimit(`login:${ip}:${email.toLowerCase()}`, 5, 15 * 60_000);
+  if (!ok) {
+    return { error: "Too many login attempts. Please try again in a few minutes." };
+  }
+
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) return { error: error.message };
@@ -42,6 +58,13 @@ export async function signUp(
   requestedRole: "teacher" | "student" = "student",
   referredBy?: string
 ) {
+  // Same brute-force/spam guard as signIn, scoped to account-creation abuse.
+  const ip = await clientIp();
+  const { ok } = rateLimit(`signup:${ip}`, 5, 15 * 60_000);
+  if (!ok) {
+    return { error: "Too many signup attempts. Please try again in a few minutes." };
+  }
+
   const supabase = await createClient();
   const data: Record<string, string> = {
     full_name: fullName,

@@ -52,6 +52,9 @@ export const en = {
     teacherPending:
       "Account created. Teacher access is pending owner approval — you can use the app as a student until then.",
     welcomeBack: "Welcome back",
+    continueWithGoogle: "Continue with Google",
+    continueWithKakao: "Continue with Kakao",
+    orContinueWith: "or",
   },
   owner: {
     activeClasses: "Active Classes",
@@ -493,6 +496,9 @@ export const ko: typeof en = {
     teacherPending:
       "계정이 생성되었습니다. 강사 권한은 원장 승인 대기 중이며, 승인 전까지는 학생으로 이용할 수 있습니다.",
     welcomeBack: "다시 오신 걸 환영합니다",
+    continueWithGoogle: "Google로 계속하기",
+    continueWithKakao: "카카오로 계속하기",
+    orContinueWith: "또는",
   },
   owner: {
     activeClasses: "진행 중인 수업",
