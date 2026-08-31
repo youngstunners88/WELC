@@ -22,6 +22,16 @@ export default async function LoginPage({
       </div>
 
       <LoginForm dict={dict} referredBy={referredBy} />
+
+      <p className="text-center text-xs text-muted-foreground">
+        <a href="/legal/terms" className="underline hover:text-foreground">
+          {dict.auth.terms ?? "Terms"}
+        </a>
+        {" · "}
+        <a href="/legal/privacy" className="underline hover:text-foreground">
+          {dict.auth.privacy ?? "Privacy"}
+        </a>
+      </p>
     </div>
   );
 }

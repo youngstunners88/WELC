@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { runAssistant } from "@/lib/ai/groq";
 import { rateLimit } from "@/lib/rate-limit";
+import { captureError } from "@/lib/observability";
 import type { Role } from "@/lib/constants";
 
 export const runtime = "nodejs";
@@ -109,8 +110,9 @@ export async function POST(req: Request) {
     });
     return NextResponse.json({ answer });
   } catch (e) {
+    captureError(e, { route: "api/ai/chat", userId: user.id });
     return NextResponse.json(
-      { error: (e as Error).message || "AI error" },
+      { error: "The assistant is temporarily unavailable. Please try again." },
       { status: 500 }
     );
   }

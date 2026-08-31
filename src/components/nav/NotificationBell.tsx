@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Bell } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,7 @@ export function NotificationBell({
 }) {
   const [items, setItems] = useState<Notification[]>(initial);
   const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
   const unread = items.filter((n) => !n.read).length;
 
   useEffect(() => {
@@ -33,7 +34,14 @@ export function NotificationBell({
           filter: `user_id=eq.${userId}`,
         },
         (payload) => {
-          setItems((prev) => [payload.new as Notification, ...prev]);
+          const incoming = payload.new as Notification;
+          // Guard against duplicates: realtime can re-deliver a row that's
+          // already in the initial server-rendered list (or on reconnect).
+          setItems((prev) =>
+            prev.some((n) => n.id === incoming.id)
+              ? prev
+              : [incoming, ...prev]
+          );
         }
       )
       .subscribe();
@@ -42,6 +50,25 @@ export function NotificationBell({
       void supabase.removeChannel(channel);
     };
   }, [userId]);
+
+  // Close the dropdown when clicking outside or pressing Escape.
+  useEffect(() => {
+    if (!open) return;
+    function onPointerDown(e: MouseEvent) {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpen(false);
+    }
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
 
   async function markAllRead() {
     const supabase = createClient();
@@ -54,7 +81,7 @@ export function NotificationBell({
   }
 
   return (
-    <div className="relative">
+    <div className="relative" ref={rootRef}>
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
@@ -70,7 +97,7 @@ export function NotificationBell({
       </button>
 
       {open && (
-        <div className="absolute right-0 z-50 mt-2 w-80 rounded-md border bg-popover bg-background shadow-lg">
+        <div className="absolute right-0 z-50 mt-2 w-80 rounded-md border bg-background shadow-lg">
           <div className="flex items-center justify-between border-b px-4 py-2">
             <span className="text-sm font-semibold">{dict.notif.title}</span>
             {unread > 0 && (

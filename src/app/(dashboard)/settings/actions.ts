@@ -30,16 +30,24 @@ export async function updateProfile(fullName: string, phone: string) {
   return { success: true };
 }
 
-/** Toggle KakaoTalk reminder consent. Isolated so it degrades gracefully if the
- *  20260608 migration hasn't been applied yet. */
-export async function updateKakaoConsent(consent: boolean) {
+/** GDPR/PIPA: return everything we hold about the caller as a JSON string the
+ *  browser can download. Data is gathered server-side by a security-definer RPC
+ *  scoped to auth.uid(), so it can only ever return the caller's own data. */
+export async function exportMyData() {
   const auth = await requireRoleAction();
   if (!auth.ok) return { error: auth.error };
-  const { error } = await auth.supabase
-    .from("profiles")
-    .update({ kakao_alimtalk_consent: consent })
-    .eq("id", auth.userId);
+  const { data, error } = await auth.supabase.rpc("rpc_export_my_data");
   if (error) return { error: error.message };
-  revalidatePath("/settings");
+  return { success: true, json: JSON.stringify(data, null, 2) };
+}
+
+/** GDPR/PIPA: delete the caller's own account and personal data, then clear the
+ *  session. The RPC refuses to delete an owner account. */
+export async function deleteMyAccount() {
+  const auth = await requireRoleAction();
+  if (!auth.ok) return { error: auth.error };
+  const { error } = await auth.supabase.rpc("rpc_delete_my_account");
+  if (error) return { error: error.message };
+  await auth.supabase.auth.signOut();
   return { success: true };
 }

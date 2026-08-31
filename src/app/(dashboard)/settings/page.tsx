@@ -4,6 +4,7 @@ import { getDictionary } from "@/lib/i18n";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProfileForm } from "@/components/settings/ProfileForm";
 import { TwoFactorCard } from "@/components/settings/TwoFactorCard";
+import { DataRights } from "@/components/settings/DataRights";
 import type { Profile } from "@/types/database";
 
 export default async function SettingsPage() {
@@ -49,6 +50,15 @@ export default async function SettingsPage() {
           </CardContent>
         </Card>
       )}
+
+      <Card className="welc-card-glow">
+        <CardHeader>
+          <CardTitle className="text-base">{dict.dataRights.title}</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <DataRights dict={dict} />
+        </CardContent>
+      </Card>
     </div>
   );
 }
