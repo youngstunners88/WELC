@@ -8,9 +8,11 @@ import {
   ClipboardList,
   BookOpen,
   ChevronRight,
+  ScrollText,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getDictionary } from "@/lib/i18n";
+import { formatDateTime } from "@/lib/datetime";
 import { StatsCard } from "@/components/dashboard/StatsCard";
 import { AttendanceTrend } from "@/components/dashboard/AttendanceTrend";
 import { FlightMotif } from "@/components/brand/FlightMotif";
@@ -46,6 +48,44 @@ export default async function OwnerDashboardPage() {
   const atRisk = ((students as StudentAttendanceRow[] | null) ?? []).filter(
     (st) => st.missed >= 3
   );
+
+  // Live activity — the most recent platform-wide actions, so the owner sees
+  // what everyone is doing the moment they land, without opening the full log.
+  const { data: recent } = await supabase
+    .from("audit_log")
+    .select("id, actor_id, actor_role, action, created_at")
+    .order("created_at", { ascending: false })
+    .limit(8);
+  const recentRows =
+    (recent as
+      | {
+          id: string;
+          actor_id: string | null;
+          actor_role: string | null;
+          action: string;
+          created_at: string;
+        }[]
+      | null) ?? [];
+
+  const actorIds = Array.from(
+    new Set(recentRows.map((r) => r.actor_id).filter(Boolean))
+  ) as string[];
+  let actorNames = new Map<string, string>();
+  if (actorIds.length > 0) {
+    const { data: profs } = await supabase
+      .from("profiles")
+      .select("id, full_name")
+      .in("id", actorIds);
+    actorNames = new Map(
+      ((profs as { id: string; full_name: string }[] | null) ?? []).map((p) => [
+        p.id,
+        p.full_name,
+      ])
+    );
+  }
+
+  const actionLabel = (action: string): string =>
+    (dict.audit.actions as Record<string, string>)[action] ?? action;
 
   const today = new Date().toLocaleDateString("ko-KR", {
     year: "numeric",
@@ -176,6 +216,54 @@ export default async function OwnerDashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Live activity — everything happening across the academy */}
+      <Card className="welc-card-glow">
+        <CardHeader className="flex-row items-center justify-between space-y-0">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <ScrollText className="h-4 w-4 text-[#0f1e4a]" />
+            {dict.audit.title}
+          </CardTitle>
+          <Link
+            href="/owner/audit"
+            className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground"
+          >
+            {dict.common.viewAll}
+            <ChevronRight className="h-3.5 w-3.5" />
+          </Link>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          {recentRows.length === 0 ? (
+            <p className="text-sm text-muted-foreground">{dict.audit.empty}</p>
+          ) : (
+            recentRows.map((r) => (
+              <div
+                key={r.id}
+                className="flex items-center justify-between gap-3 border-b pb-2 last:border-0 last:pb-0"
+              >
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium">
+                    {r.actor_id
+                      ? actorNames.get(r.actor_id) ?? "—"
+                      : dict.audit.system}
+                    {r.actor_role && (
+                      <span className="ml-2 text-xs font-normal text-muted-foreground">
+                        {r.actor_role}
+                      </span>
+                    )}
+                  </p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {actionLabel(r.action)}
+                  </p>
+                </div>
+                <span className="shrink-0 text-xs text-muted-foreground">
+                  {formatDateTime(r.created_at)}
+                </span>
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 }

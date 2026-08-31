@@ -8,6 +8,7 @@ export const en = {
     back: "Back",
     none: "None",
     total: "Total",
+    viewAll: "View all",
   },
   nav: {
     dashboard: "Dashboard",
@@ -452,6 +453,7 @@ export const ko: typeof en = {
     back: "뒤로",
     none: "없음",
     total: "합계",
+    viewAll: "전체 보기",
   },
   nav: {
     dashboard: "대시보드",

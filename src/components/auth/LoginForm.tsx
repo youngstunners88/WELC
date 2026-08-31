@@ -22,12 +22,10 @@ export function LoginForm({
     referredBy ? "signup" : "login"
   );
   const [isPending, startTransition] = useTransition();
-  const [oauthPending, setOauthPending] = useState<"google" | "kakao" | null>(
-    null
-  );
+  const [oauthPending, setOauthPending] = useState<"google" | null>(null);
   const router = useRouter();
 
-  async function onOAuth(provider: "google" | "kakao") {
+  async function onOAuth(provider: "google") {
     setOauthPending(provider);
     const supabase = createClient();
     const { error } = await supabase.auth.signInWithOAuth({
@@ -104,20 +102,6 @@ export function LoginForm({
             />
           </svg>
           {oauthPending === "google" ? dict.common.loading : dict.auth.continueWithGoogle}
-        </Button>
-        <Button
-          type="button"
-          className="w-full gap-2 bg-[#FEE500] text-[#191919] hover:bg-[#FEE500]/90"
-          disabled={oauthPending !== null}
-          onClick={() => onOAuth("kakao")}
-        >
-          <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" aria-hidden>
-            <path
-              fill="#191919"
-              d="M12 3C6.5 3 2 6.6 2 11c0 2.8 1.9 5.3 4.7 6.7-.2.7-.8 2.9-.9 3.4 0 0-.1.4.2.5.3.1.6 0 .6 0 .8-.1 3.4-2.2 4-2.7.5.1.9.1 1.4.1 5.5 0 10-3.6 10-8s-4.5-8-10-8z"
-            />
-          </svg>
-          {oauthPending === "kakao" ? dict.common.loading : dict.auth.continueWithKakao}
         </Button>
       </div>
 
