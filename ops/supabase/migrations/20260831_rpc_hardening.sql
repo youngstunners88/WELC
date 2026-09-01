@@ -15,9 +15,11 @@
 --    search_path. Pinning removes the ambiguity.
 alter function public.enforce_commitment_window() set search_path = public;
 
--- 2) Revoke EXECUTE from anon on every privileged RPC (lints 0028/0029).
---    None of these should be reachable before sign-in. authenticated keeps
---    EXECUTE because the functions' own internal role checks are the real gate.
+-- 2) Take EXECUTE away from anon on every privileged RPC (lints 0028/0029).
+--    IMPORTANT: Postgres grants EXECUTE to PUBLIC by default when a function is
+--    created, and PUBLIC covers anon — so revoking from anon alone is a no-op
+--    while the PUBLIC grant stands. We must revoke from PUBLIC, then grant back
+--    to authenticated (whose own internal role checks are the real gate).
 do $$
 declare
   fn text;
@@ -45,7 +47,8 @@ declare
 begin
   foreach fn in array fns loop
     begin
-      execute format('revoke execute on function public.%s from anon;', fn);
+      execute format('revoke execute on function public.%s from public, anon;', fn);
+      execute format('grant execute on function public.%s to authenticated;', fn);
     exception when undefined_function then
       raise notice 'skip (not found): %', fn;
     end;
@@ -56,7 +59,7 @@ end $$;
 -- auth.users; it is not meant to be called over the REST API at all.
 do $$
 begin
-  execute 'revoke execute on function public.handle_new_user() from anon, authenticated';
+  execute 'revoke execute on function public.handle_new_user() from public, anon, authenticated';
 exception when undefined_function then
   raise notice 'handle_new_user not found';
 end $$;
