@@ -12,11 +12,13 @@ async function clientIp(): Promise<string> {
 }
 
 export async function signIn(email: string, password: string) {
-  // Brute-force guard: 5 attempts / 15 min, keyed by IP + the email being
+  // Brute-force guard: 20 attempts / 15 min, keyed by IP + the email being
   // attempted, so one bad actor can't lock out other users at the same IP
-  // and a distributed attempt against one account still gets throttled.
+  // and a distributed attempt against one account still gets throttled. 20 is
+  // generous enough that normal users (or a shared-NAT office/school network)
+  // never trip it by mistake, while still stopping a real password-guessing run.
   const ip = await clientIp();
-  const { ok } = rateLimit(`login:${ip}:${email.toLowerCase()}`, 5, 15 * 60_000);
+  const { ok } = rateLimit(`login:${ip}:${email.toLowerCase()}`, 20, 15 * 60_000);
   if (!ok) {
     return { error: "Too many login attempts. Please try again in a few minutes." };
   }
@@ -59,8 +61,12 @@ export async function signUp(
   referredBy?: string
 ) {
   // Same brute-force/spam guard as signIn, scoped to account-creation abuse.
+  // Keyed by IP only (not email, since every signup email is new), so a
+  // shared-NAT network (office/school wifi) sharing one public IP needs a
+  // generous budget — 20 signups / 15 min — to avoid locking out unrelated
+  // people testing or enrolling from the same network.
   const ip = await clientIp();
-  const { ok } = rateLimit(`signup:${ip}`, 5, 15 * 60_000);
+  const { ok } = rateLimit(`signup:${ip}`, 20, 15 * 60_000);
   if (!ok) {
     return { error: "Too many signup attempts. Please try again in a few minutes." };
   }
