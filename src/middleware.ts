@@ -42,6 +42,37 @@ function corsHeaders(
   return headers;
 }
 
+/**
+ * Content-Security-Policy, generated fresh per request with a random nonce.
+ *
+ * This MUST be per-request (not a static header from next.config.mjs) because
+ * the App Router injects inline <script> tags to stream React hydration data
+ * (`self.__next_f.push(...)`) into every page. A `script-src 'self'` policy
+ * with no 'unsafe-inline' and no nonce makes every modern browser silently
+ * block those inline scripts — the server-rendered HTML still looks perfect,
+ * but React never hydrates, so no click handler on the entire site ever
+ * fires. That was a real, live bug: it looked like "nothing works" (buttons,
+ * forms, OAuth — everything render-only) while every backend check passed.
+ *
+ * The nonce is threaded through via the `x-nonce` request header; Next.js's
+ * own App Router runtime automatically applies it to the inline scripts it
+ * emits when it sees this pattern (response CSP header + forwarded request
+ * header), so no changes are needed in layout.tsx for Next's own scripts.
+ */
+function buildCsp(nonce: string): string {
+  return [
+    "default-src 'self'",
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'`,
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: https://*.supabase.co",
+    "font-src 'self' data:",
+    "connect-src 'self' https://*.supabase.co wss://*.supabase.co",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+  ].join("; ");
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
@@ -79,7 +110,15 @@ export async function middleware(request: NextRequest) {
     return apiResponse;
   }
 
-  const response = NextResponse.next({ request });
+  // ── Every other route: nonce'd CSP + the existing page-auth check ────────
+  const nonce = crypto.randomUUID().replace(/-/g, "");
+  const csp = buildCsp(nonce);
+
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set("x-nonce", nonce);
+
+  const response = NextResponse.next({ request: { headers: requestHeaders } });
+  response.headers.set("Content-Security-Policy", csp);
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -112,7 +151,9 @@ export async function middleware(request: NextRequest) {
   ].some((p) => request.nextUrl.pathname.startsWith(p));
 
   if (isProtected && !user) {
-    return NextResponse.redirect(new URL("/login", request.url));
+    const redirect = NextResponse.redirect(new URL("/login", request.url));
+    redirect.headers.set("Content-Security-Policy", csp);
+    return redirect;
   }
 
   return response;
@@ -120,13 +161,10 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/owner/:path*",
-    "/teacher/:path*",
-    "/student/:path*",
-    "/settings/:path*",
-    "/calendar/:path*",
-    "/messages/:path*",
-    "/mfa/:path*",
-    "/api/:path*",
+    // Everything except static assets and image optimization files — CSP (and
+    // the auth check, for protected paths) must run on every real page,
+    // including /login, /, /legal/*, /auth/callback, which the old matcher
+    // skipped.
+    "/((?!_next/static|_next/image|favicon.ico|apple-touch-icon.*).*)",
   ],
 };
