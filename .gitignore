@@ -41,3 +41,6 @@ next-env.d.ts
 .agents/
 .claude/skills/impeccable
 skills-lock.json
+
+# Agent worktrees (transient, auto-cleaned)
+.claude/worktrees/
