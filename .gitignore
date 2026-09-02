@@ -44,3 +44,6 @@ skills-lock.json
 
 # Agent worktrees (transient, auto-cleaned)
 .claude/worktrees/
+
+# Database exports — contain student personal data, never commit
+/backups/
