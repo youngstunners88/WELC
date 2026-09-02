@@ -21,9 +21,67 @@ customers and no evidence to settle it.
 ## What closes this properly
 
 Upgrade the Supabase project to a plan that includes daily backups and PITR.
-On the current plan the managed-backup APIs are unavailable — the same plan
-gate also blocks leaked-password (HIBP) protection, which returns HTTP 402.
-One plan change resolves both.
+
+**A plan upgrade is currently off the table (budget).** So the two gaps it
+would have closed are handled separately below — one is fully solved, the
+other is mitigated but not eliminated.
+
+| Gap | Status without a paid plan |
+|---|---|
+| Leaked-password protection (was HTTP 402) | **Fully solved in the app.** `src/lib/security/pwned-password.ts` checks new passwords against Have I Been Pwned's free range API using k-anonymity, enforced in the signup action. Same protection Supabase sells. |
+| Managed backups / PITR | **Mitigated, not solved.** Scheduled encrypted export, below. Real PITR is not reproducible without the platform. |
+
+## Automated encrypted backup (the workaround in place)
+
+`.github/workflows/backup.yml` runs daily at 03:00 Asia/Seoul (and on demand
+from the Actions tab). It exports every public table, verifies the export is
+non-empty, encrypts it with AES-256, and uploads it as a 90-day artifact.
+
+**This repository is public, so workflow artifacts are publicly
+downloadable.** That is exactly why the archive is encrypted on the runner
+before upload — the artifact is useless without the passphrase. The workflow
+refuses to upload anything if `BACKUP_PASSPHRASE` is missing. Never remove
+that step while the repo is public.
+
+### One-time setup (required — the workflow fails without it)
+
+In GitHub → Settings → Secrets and variables → Actions, add:
+
+| Secret | Value |
+|---|---|
+| `SUPABASE_ACCESS_TOKEN` | A Supabase personal access token (`sbp_…`) from https://supabase.com/dashboard/account/tokens |
+| `BACKUP_PASSPHRASE` | A long random passphrase — 6+ random words. **Write it down somewhere physical.** If it is lost, every backup is permanently unreadable. |
+
+### Restoring from a backup
+
+Download the artifact from the Actions run, then:
+
+```bash
+openssl enc -d -aes-256-cbc -pbkdf2 -iter 250000 \
+  -in backup.tar.gz.enc -out backup.tar.gz
+tar xzf backup.tar.gz
+```
+
+Verified end to end: the decrypted archive is bit-identical to the original
+(SHA-256 match), and a wrong passphrase fails closed with `bad decrypt`.
+
+Then follow the rebuild procedure below to load the JSON back in.
+
+### What this buys you, stated plainly
+
+| | Daily encrypted export | Real PITR (unavailable) |
+|---|---|---|
+| Worst-case data loss | **Up to 24 hours** | Seconds |
+| Time to restore | **1–2 hours, manual** | Minutes |
+| Covers accidental deletion | Yes (up to 24h old) | Yes |
+| Covers `auth.users` | **No** | Yes |
+
+`auth.users` is deliberately excluded. It holds password hashes for accounts
+belonging to minors; putting those in a downloadable artifact — even an
+encrypted one — is a worse risk than the inconvenience it avoids. The
+consequence is real and must be understood: **after a full disaster, every
+user has to sign up again.** At the current size that is minutes of work; if
+the academy grows to hundreds of students, revisit this trade-off.
 
 ## The stopgap that exists today
 

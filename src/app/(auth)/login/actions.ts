@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
 import { logAudit } from "@/lib/audit";
 import { rateLimit } from "@/lib/rate-limit";
+import { isPasswordPwned } from "@/lib/security/pwned-password";
 
 async function clientIp(): Promise<string> {
   const h = await headers();
@@ -69,6 +70,19 @@ export async function signUp(
   const { ok } = rateLimit(`signup:${ip}`, 20, 15 * 60_000);
   if (!ok) {
     return { error: "Too many signup attempts. Please try again in a few minutes." };
+  }
+
+  // Reject passwords known to be in breach corpora. Supabase provides this
+  // natively but gates it behind a paid plan (the Management API returns 402
+  // on this project), so it is enforced here instead. Fails open: if HIBP is
+  // unreachable the signup proceeds rather than blocking enrolment on a
+  // third-party outage.
+  const pwned = await isPasswordPwned(password);
+  if (pwned.pwned) {
+    return {
+      error:
+        "This password has appeared in a known data breach. Please choose a different one.",
+    };
   }
 
   const supabase = await createClient();

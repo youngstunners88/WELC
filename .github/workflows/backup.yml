@@ -1,0 +1,75 @@
+name: Encrypted database backup
+
+# The Supabase project is on a plan with no managed backups and no PITR
+# (`/database/backups` returns pitr_enabled:false, backups:[]). This workflow
+# is the compensating control: a scheduled logical export, encrypted before it
+# ever leaves the runner.
+#
+# REQUIRED REPOSITORY SECRETS (Settings -> Secrets and variables -> Actions):
+#   SUPABASE_ACCESS_TOKEN  - a Supabase personal access token (sbp_...)
+#   BACKUP_PASSPHRASE      - a long random passphrase used to encrypt the dump
+#
+# THIS REPOSITORY IS PUBLIC, which means workflow artifacts are publicly
+# downloadable. That is precisely why the archive is encrypted on the runner
+# with AES-256 before upload — the artifact is useless without the passphrase.
+# Never remove the encryption step while the repo is public.
+
+on:
+  schedule:
+    - cron: "0 18 * * *" # 03:00 Asia/Seoul daily
+  workflow_dispatch: # allow a manual run from the Actions tab
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Export all public tables to JSON
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+        run: node ops/backup-database.mjs ./backup-out
+
+      - name: Verify the export is non-empty
+        # A backup job that silently produces nothing is worse than no backup
+        # job, because it looks green. Fail loudly instead.
+        run: |
+          test -f ./backup-out/_manifest.json || { echo "No manifest produced"; exit 1; }
+          rows=$(node -e "const m=require('./backup-out/_manifest.json');console.log(Object.values(m.tables).reduce((a,b)=>a+b,0))")
+          echo "Total rows exported: $rows"
+          tables=$(node -e "const m=require('./backup-out/_manifest.json');console.log(Object.keys(m.tables).length)")
+          echo "Tables exported: $tables"
+          if [ "$tables" -lt 1 ]; then echo "Export contained no tables"; exit 1; fi
+
+      - name: Encrypt the export
+        env:
+          BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          if [ -z "$BACKUP_PASSPHRASE" ]; then
+            echo "BACKUP_PASSPHRASE is not set — refusing to upload an unencrypted backup."
+            exit 1
+          fi
+          tar czf backup.tar.gz -C ./backup-out .
+          # PBKDF2 + AES-256-CBC. Decrypt with:
+          #   openssl enc -d -aes-256-cbc -pbkdf2 -in backup.tar.gz.enc -out backup.tar.gz
+          openssl enc -aes-256-cbc -pbkdf2 -iter 250000 -salt \
+            -in backup.tar.gz -out backup.tar.gz.enc \
+            -pass env:BACKUP_PASSPHRASE
+          rm -f backup.tar.gz
+          rm -rf ./backup-out
+          ls -lh backup.tar.gz.enc
+
+      - name: Upload encrypted artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: welc-db-backup-${{ github.run_id }}
+          path: backup.tar.gz.enc
+          retention-days: 90
+          if-no-files-found: error
