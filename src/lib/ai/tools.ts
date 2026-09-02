@@ -93,16 +93,50 @@ export const toolExecutors: Record<string, Executor> = {
 
   async get_today_classes(supabase) {
     const { startIso, endIso } = seoulToday();
+    // Teacher names are resolved via rpc_teacher_names rather than an embedded
+    // join on profiles: students have no RLS read access to teacher rows, so
+    // the join returned null for them and the assistant reported classes with
+    // no teacher. The RPC returns id + full_name only, never contact details.
     const { data, error } = await supabase
       .from("class_sessions")
-      .select(
-        "scheduled_at, status, classes!inner(name, profiles:teacher_id(full_name))"
-      )
+      .select("scheduled_at, status, classes!inner(name, teacher_id)")
       .gte("scheduled_at", startIso)
       .lt("scheduled_at", endIso)
       .order("scheduled_at");
     if (error) return { ok: false, note: error.message };
-    return { ok: true, data };
+
+    const rows = (data ?? []) as unknown as {
+      scheduled_at: string;
+      status: string;
+      classes: { name: string; teacher_id: string | null } | null;
+    }[];
+    const teacherIds = Array.from(
+      new Set(rows.map((r) => r.classes?.teacher_id).filter(Boolean))
+    ) as string[];
+
+    let nameById = new Map<string, string>();
+    if (teacherIds.length) {
+      const { data: names } = await supabase.rpc("rpc_teacher_names", {
+        p_ids: teacherIds,
+      });
+      nameById = new Map(
+        ((names as { id: string; full_name: string }[] | null) ?? []).map(
+          (t) => [t.id, t.full_name]
+        )
+      );
+    }
+
+    return {
+      ok: true,
+      data: rows.map((r) => ({
+        scheduled_at: r.scheduled_at,
+        status: r.status,
+        class_name: r.classes?.name ?? null,
+        teacher_name: r.classes?.teacher_id
+          ? nameById.get(r.classes.teacher_id) ?? null
+          : null,
+      })),
+    };
   },
 
   // Write action (owner/teacher only — enforced inside the RPC). Sends an in-app

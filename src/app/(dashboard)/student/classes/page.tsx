@@ -15,7 +15,6 @@ import type {
 } from "@/types/database";
 
 interface ClassWithSessions extends Class {
-  teacher: Pick<Profile, "full_name"> | null;
   class_sessions: ClassSession[];
 }
 
@@ -30,11 +29,13 @@ export default async function StudentClassesPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  // Teacher names come from rpc_teacher_names, not a join on profiles: RLS
+  // gives students no read access to teacher rows (by design — profiles
+  // carries teacher email/phone), so the old embedded join silently returned
+  // null and teacher names rendered blank.
   const { data: classes } = await supabase
     .from("classes")
-    .select(
-      "*, teacher:profiles!classes_teacher_id_fkey(full_name), class_sessions(*)"
-    )
+    .select("*, class_sessions(*)")
     .order("start_date", { ascending: true });
 
   const { data: commitments } = await supabase
@@ -53,6 +54,19 @@ export default async function StudentClassesPage() {
 
   const rows = (classes as ClassWithSessions[] | null) ?? [];
   const ids = rows.map((c) => c.id);
+
+  // Resolve teacher display names (id + full_name only — never contact details).
+  const teacherIds = Array.from(
+    new Set(rows.map((c) => c.teacher_id).filter(Boolean))
+  ) as string[];
+  const { data: teacherNames } = teacherIds.length
+    ? await supabase.rpc("rpc_teacher_names", { p_ids: teacherIds })
+    : { data: [] as { id: string; full_name: string }[] };
+  const teacherNameById = new Map(
+    ((teacherNames as { id: string; full_name: string }[] | null) ?? []).map(
+      (t) => [t.id, t.full_name]
+    )
+  );
 
   const { data: materials } = ids.length
     ? await supabase
@@ -94,7 +108,8 @@ export default async function StudentClassesPage() {
                 <Badge variant="secondary">{c.level}</Badge>
               </div>
               <p className="text-sm text-muted-foreground">
-                {dict.owner.teacher}: {c.teacher?.full_name ?? "—"}
+                {dict.owner.teacher}:{" "}
+                {teacherNameById.get(c.teacher_id ?? "") ?? "—"}
               </p>
             </CardHeader>
             <CardContent className="space-y-2">

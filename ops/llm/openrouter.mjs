@@ -46,7 +46,9 @@ const PROVIDER_ALIASES = {
 };
 
 function apiKey() {
-  const key = process.env.OPENROUTER_API_KEY;
+  // Accept either spelling — the environment may carry OPENROUTER_API or the
+  // more conventional OPENROUTER_API_KEY.
+  const key = process.env.OPENROUTER_API_KEY || process.env.OPENROUTER_API;
   if (!key) {
     console.error(
       "Missing OPENROUTER_API_KEY. Add it to the environment (https://openrouter.ai/keys)\n" +
