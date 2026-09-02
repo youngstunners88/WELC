@@ -1,4 +1,9 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { seoulDayRange } from "@/lib/datetime";
+import {
+  aggregateTeacherHours,
+  type TeacherHoursRow,
+} from "@/lib/payroll";
 
 /**
  * Read-only AI tools. Each executes through the *caller's* RLS-scoped Supabase
@@ -17,18 +22,6 @@ type Executor = (
   args: Record<string, unknown>
 ) => Promise<ToolResult>;
 
-function seoulToday(): { startIso: string; endIso: string } {
-  const now = new Date();
-  const seoul = new Date(
-    now.toLocaleString("en-US", { timeZone: "Asia/Seoul" })
-  );
-  seoul.setHours(0, 0, 0, 0);
-  const start = new Date(seoul);
-  const end = new Date(seoul);
-  end.setDate(end.getDate() + 1);
-  return { startIso: start.toISOString(), endIso: end.toISOString() };
-}
-
 export const toolExecutors: Record<string, Executor> = {
   async get_dashboard_stats(supabase) {
     const { data, error } = await supabase.rpc("owner_dashboard_stats");
@@ -42,30 +35,8 @@ export const toolExecutors: Record<string, Executor> = {
       .from("v_teacher_hours_monthly")
       .select("teacher_name, month, hours, sessions");
     if (error) return { ok: false, note: error.message };
-    const rows = (data ?? []) as {
-      teacher_name: string;
-      month: string;
-      hours: number;
-      sessions: number;
-    }[];
-    const filtered = month
-      ? rows.filter((r) => String(r.month).slice(0, 7) === month)
-      : rows;
-    const byTeacher = new Map<string, { hours: number; sessions: number }>();
-    for (const r of filtered) {
-      const cur = byTeacher.get(r.teacher_name) ?? { hours: 0, sessions: 0 };
-      cur.hours += Number(r.hours);
-      cur.sessions += Number(r.sessions);
-      byTeacher.set(r.teacher_name, cur);
-    }
-    return {
-      ok: true,
-      data: Array.from(byTeacher, ([teacher_name, v]) => ({
-        teacher_name,
-        hours: Math.round(v.hours * 10) / 10,
-        sessions: v.sessions,
-      })),
-    };
+    const rows = (data ?? []) as TeacherHoursRow[];
+    return { ok: true, data: aggregateTeacherHours(rows, month) };
   },
 
   async get_at_risk_students(supabase, args) {
@@ -92,7 +63,7 @@ export const toolExecutors: Record<string, Executor> = {
   },
 
   async get_today_classes(supabase) {
-    const { startIso, endIso } = seoulToday();
+    const { startIso, endIso } = seoulDayRange();
     // Teacher names are resolved via rpc_teacher_names rather than an embedded
     // join on profiles: students have no RLS read access to teacher rows, so
     // the join returned null for them and the assistant reported classes with

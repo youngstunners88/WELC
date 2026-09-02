@@ -3,18 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { requireRoleAction } from "@/lib/auth/guard";
 import { encryptMessage, isMessagingConfigured } from "@/lib/crypto/messages";
-
-const MAX_LEN = 2000;
+import { validateMessageBody } from "@/lib/messages";
 
 type Audience = "all" | "teachers" | "students";
 type Recurrence = "none" | "weekly" | "monthly";
-
-function validateBody(body: string): { ok: true; text: string } | { ok: false; error: string } {
-  const text = body.trim();
-  if (!text) return { ok: false, error: "Message is required" };
-  if (text.length > MAX_LEN) return { ok: false, error: "Message is too long" };
-  return { ok: true, text };
-}
 
 /** Owner → audience broadcast. Fans out into each member's private thread. */
 export async function sendBroadcast(
@@ -28,7 +20,7 @@ export async function sendBroadcast(
   if (!["all", "teachers", "students"].includes(audience)) {
     return { error: "Unknown audience" };
   }
-  const v = validateBody(body);
+  const v = validateMessageBody(body);
   if (!v.ok) return { error: v.error };
 
   const auth = await requireRoleAction(["owner"]);
@@ -67,7 +59,7 @@ export async function scheduleBroadcast(
   if (isNaN(when.getTime()) || when.getTime() <= Date.now()) {
     return { error: "Pick a time in the future" };
   }
-  const v = validateBody(body);
+  const v = validateMessageBody(body);
   if (!v.ok) return { error: v.error };
 
   const auth = await requireRoleAction(["owner"]);
@@ -115,7 +107,7 @@ export async function ownerDm(memberId: string, body: string) {
   if (!isMessagingConfigured()) {
     return { error: "Secure messaging is not configured yet." };
   }
-  const v = validateBody(body);
+  const v = validateMessageBody(body);
   if (!v.ok) return { error: v.error };
 
   const auth = await requireRoleAction(["owner"]);
@@ -136,7 +128,7 @@ export async function ownerReply(threadId: string, body: string) {
   if (!isMessagingConfigured()) {
     return { error: "Secure messaging is not configured yet." };
   }
-  const v = validateBody(body);
+  const v = validateMessageBody(body);
   if (!v.ok) return { error: v.error };
 
   const auth = await requireRoleAction(["owner"]);
@@ -161,7 +153,7 @@ export async function memberReply(body: string) {
   if (!isMessagingConfigured()) {
     return { error: "Secure messaging is not configured yet." };
   }
-  const v = validateBody(body);
+  const v = validateMessageBody(body);
   if (!v.ok) return { error: v.error };
 
   const auth = await requireRoleAction(["teacher", "student"]);
