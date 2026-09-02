@@ -34,7 +34,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Installed agent skills (tooling, not app code)
+# Third-party skills installed via `npx skills add` (tooling, not app code).
+# Project-authored skills live directly in .claude/skills/<name>/ and ARE
+# tracked — only the impeccable symlink (installed, not authored here) is
+# excluded.
 .agents/
-.claude/skills/
+.claude/skills/impeccable
 skills-lock.json

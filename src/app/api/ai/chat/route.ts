@@ -3,47 +3,18 @@ import { createClient } from "@/lib/supabase/server";
 import { runAssistant } from "@/lib/ai/groq";
 import { rateLimit } from "@/lib/rate-limit";
 import { captureError } from "@/lib/observability";
+import { sanitize, cleanHistory } from "@/lib/ai/sanitize";
 import type { Role } from "@/lib/constants";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
 const MAX_MESSAGE_CHARS = 500;
-const MAX_HISTORY_TURNS = 20;
 const DAILY_MESSAGE_LIMIT = 50;
 
 interface Body {
   message?: string;
   history?: { role: "user" | "assistant"; content: string }[];
-}
-
-/** Strip control/zero-width characters commonly used to obfuscate prompt
- * injection or smuggle instructions past naive filters. Not a substitute for
- * the model's own system-prompt guardrails, but removes cheap tricks. */
-function sanitize(input: string): string {
-  return input
-    // Strip control chars (\x00-\x1F, \x7F) and zero-width / bidi-override
-    // chars (U+200B-U+200F, U+202A-U+202E, U+FEFF) used to hide or reorder
-    // text and smuggle instructions past naive filters.
-    // eslint-disable-next-line no-control-regex
-    .replace(/[\x00-\x1F\x7F\u200B-\u200F\u202A-\u202E\uFEFF]/g, "")
-    .trim();
-}
-
-function cleanHistory(
-  raw: unknown
-): { role: "user" | "assistant"; content: string }[] {
-  if (!Array.isArray(raw)) return [];
-  return raw
-    .filter(
-      (m): m is { role: "user" | "assistant"; content: string } =>
-        !!m &&
-        typeof m === "object" &&
-        (m.role === "user" || m.role === "assistant") &&
-        typeof m.content === "string"
-    )
-    .slice(-MAX_HISTORY_TURNS)
-    .map((m) => ({ role: m.role, content: sanitize(m.content).slice(0, 2000) }));
 }
 
 export async function POST(req: Request) {

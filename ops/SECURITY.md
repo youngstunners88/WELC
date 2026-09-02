@@ -36,6 +36,21 @@ Three roles — `owner`, `teacher`, `student` — enforced at **two layers**:
 - Commitment / uncommit timing enforced by DB triggers, not just the client.
 - `safeUrl()` blocks `javascript:` and other non-http(s) hrefs.
 
+## Known dependency vulnerabilities (tracked, not yet resolved)
+
+`npm audit` (2026-09-01): `next@14.2.35` carries multiple high-severity
+advisories (SSRF via rewrites, unauthenticated Server Function endpoint
+disclosure, cache-poisoning and DoS variants — see `npm audit` for the full
+GHSA list). The only fix is a major upgrade to `next@16.3.4` (14 → 16, no 15
+in between), which is a breaking change for an App Router + middleware-heavy
+app like this one — not something to apply blind given how much this app's
+behavior has depended on exact framework behavior (see the CSP/hydration
+incident: a single header change made the entire site non-interactive).
+CI now runs `npm audit --audit-level=high` on every push as `continue-on-error`
+so this stays visible without blocking merges until the upgrade is
+deliberately planned, tested end-to-end (especially middleware, Server
+Actions, and the nonce-based CSP), and shipped as its own change.
+
 ## Accepted residual risk
 
 - **`class-materials` is a public-read bucket.** Anyone with a file's full URL

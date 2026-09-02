@@ -1,8 +1,12 @@
 name: CI
 
 on:
+  # No branch filter: this repo does its work directly on a single non-main
+  # branch (claude/magical-bell-6SZ0m), not main. A `branches: [main]` filter
+  # here was a silent no-op — every push to the real working branch skipped
+  # CI entirely, so build/type-check regressions only ever surfaced in
+  # production. Pull requests still get their own run below.
   push:
-    branches: [main]
   pull_request:
 
 jobs:
@@ -19,8 +23,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Lint
+        run: npm run lint
+
       - name: Type check
         run: npm run type-check
+
+      - name: Test
+        run: npm test
+
+      - name: Dependency vulnerability audit (high/critical only)
+        run: npm audit --omit=dev --audit-level=high
+        continue-on-error: true # tracked, not blocking yet — see SECURITY.md
 
       - name: Build
         run: npm run build
